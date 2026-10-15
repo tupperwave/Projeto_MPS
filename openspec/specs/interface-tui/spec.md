@@ -1,5 +1,11 @@
 # Interface TUI
 
+## Purpose
+
+Definir o acesso aos fluxos documentados por meio da interface de terminal do sistema.
+
+## Requirements
+
 ### Requirement: RF10 — Oferecer interface de terminal
 O sistema DEVE oferecer navegação por terminal com atalhos e feedback visual.
 

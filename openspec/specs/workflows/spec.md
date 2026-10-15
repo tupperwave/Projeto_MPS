@@ -1,5 +1,11 @@
 # Workflows
 
+## Purpose
+
+Definir a simulação de workflows antes de executar suas etapas.
+
+## Requirements
+
 ### Requirement: RF07 — Simular workflow antes da execução
 O sistema DEVE permitir simular as etapas de um workflow e apresentar previamente as ações planejadas.
 

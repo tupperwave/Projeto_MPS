@@ -1,5 +1,11 @@
 # Operações remotas
 
+## Purpose
+
+Definir a execução de comandos remotos via SSH e a validação dos resultados pós-ação.
+
+## Requirements
+
 ### Requirement: RF05 — Executar comando remoto
 O sistema DEVE permitir a execução não interativa de comandos via SSH em host autorizado e registrar a tentativa.
 

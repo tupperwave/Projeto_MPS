@@ -1,5 +1,11 @@
 # Transferência de arquivos
 
+## Purpose
+
+Definir transferências de arquivos via SFTP e a verificação de integridade quando aplicável.
+
+## Requirements
+
 ### Requirement: RF13 — Transferir arquivos via SFTP
 O sistema DEVE permitir upload e download via SFTP e verificar integridade por checksum quando aplicável.
 

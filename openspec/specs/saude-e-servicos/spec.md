@@ -1,5 +1,11 @@
 # Saúde e serviços
 
+## Purpose
+
+Definir consultas de saúde do host e operações de gerenciamento de serviços systemd.
+
+## Requirements
+
 ### Requirement: RF11 — Consultar saúde do host
 O sistema DEVE consultar indicadores de disco, memória, carga de CPU e estado de serviços systemd.
 

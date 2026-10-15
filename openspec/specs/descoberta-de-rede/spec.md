@@ -1,5 +1,11 @@
 # Descoberta de rede
 
+## Purpose
+
+Definir a descoberta de hosts em escopo autorizado e a atualização do inventário a partir dos resultados do Nmap.
+
+## Requirements
+
 ### Requirement: RF01 — Descobrir dispositivos na rede
 O sistema DEVE permitir que o operador execute uma descoberta em um escopo de rede autorizado, usando Nmap e interpretando os resultados XML para atualizar o inventário local SQLite.
 

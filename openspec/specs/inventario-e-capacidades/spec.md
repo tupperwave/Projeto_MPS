@@ -1,5 +1,11 @@
 # Inventário e capacidades
 
+## Purpose
+
+Definir a manutenção dos dados de hosts, a apresentação de capacidades e a confirmação proporcional ao risco.
+
+## Requirements
+
 ### Requirement: RF02 — Manter inventário de hosts
 O sistema DEVE armazenar dados estruturados dos hosts, incluindo endereço IP, hostname, portas, serviços, timestamps e tags disponíveis.
 

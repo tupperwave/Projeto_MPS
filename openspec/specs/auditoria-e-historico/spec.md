@@ -1,5 +1,11 @@
 # Auditoria e histórico
 
+## Purpose
+
+Definir o registro de evidências das ações e a consulta do histórico de operações.
+
+## Requirements
+
 ### Requirement: RF09 — Registrar evidências
 O sistema DEVE registrar evidências auditáveis das ações executadas.
 
