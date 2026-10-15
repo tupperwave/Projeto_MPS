@@ -1,0 +1,12 @@
+schema: spec-driven
+
+context: |
+  Sistema: NetHub — ferramenta TUI para administração de infraestrutura.
+  Escopo descrito nas fontes atuais: descoberta de rede, inventário, operações remotas, workflows e auditoria.
+  As especificações registram a linha de base dos requisitos funcionais presentes no material do projeto.
+
+rules:
+  - Escrever o conteúdo em português; preservar os cabeçalhos reconhecidos pelo OpenSpec em inglês.
+  - Usar IDs estáveis RFnn e NF-CAT-nn, sem renumerar ou reutilizar IDs publicados.
+  - Cada requisito deve ter prioridade, casos de uso relacionados e pelo menos um cenário verificável.
+  - Não transformar critérios não definidos nas fontes em metas inventadas; explicitar pendências.
