@@ -9,9 +9,6 @@
 | 1. 1 | 2026-10-15 | Inclusão de versionamento, Escopo
 
 
-##2. Requisitos 
-#2.1 REQUISITOS FUNCIONAIS 
-
 # 2. Escopo
 
 ## 2.1. Funcionalidades incluídas
