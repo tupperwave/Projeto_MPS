@@ -10,7 +10,7 @@ Definir o acesso aos fluxos documentados por meio da interface de terminal do si
 O sistema DEVE oferecer navegação por terminal com atalhos e feedback visual.
 
 **Prioridade:** Essencial
-**Casos de uso:** UC01 a UC09
+**Casos de uso:** UC01 a UC13, UC17
 
 #### Scenario: Operar pelo terminal
 - **GIVEN** o operador inicia o sistema em um terminal compatível
