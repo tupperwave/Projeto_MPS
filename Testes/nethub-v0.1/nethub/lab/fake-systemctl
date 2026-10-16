@@ -1,0 +1,49 @@
+#!/bin/bash
+# Emulação MÍNIMA do systemctl para testar o NetHub em contêiner/VM sem systemd.
+# Suporta: show, restart, list-units, is-system-running. NÃO use em um host real.
+D=/var/lib/fakesd
+cmd=""; units=(); props=""; only_failed=0
+args=("$@"); i=0
+while [ $i -lt ${#args[@]} ]; do
+  a="${args[$i]}"
+  case "$a" in
+    show|restart|list-units|is-system-running) [ -z "$cmd" ] && cmd="$a" ;;
+    -p) i=$((i+1)); props="$props,${args[$i]}" ;;
+    --state=failed) only_failed=1 ;;
+    -*) ;;
+    *) units+=("$a") ;;
+  esac
+  i=$((i+1))
+done
+sf() { echo "$D/${1%.service}.state"; }
+get() { grep "^$2=" "$1" 2>/dev/null | head -n1 | cut -d= -f2-; }
+set_kv() { local f="$1" k="$2" v="$3"; if grep -q "^$k=" "$f"; then sed -i "s|^$k=.*|$k=$v|" "$f"; else echo "$k=$v" >> "$f"; fi; }
+case "$cmd" in
+  show)
+    f=$(sf "${units[0]}")
+    if [ ! -f "$f" ]; then
+      printf 'LoadState=not-found\nActiveState=inactive\nSubState=dead\nMainPID=0\nActiveEnterTimestampMonotonic=0\n'
+    else
+      for p in $(echo "$props" | tr ',' ' '); do echo "$p=$(get "$f" "$p")"; done
+    fi ;;
+  restart)
+    u="${units[0]}"; f=$(sf "$u")
+    if [ "$(id -u)" != "0" ]; then echo "Failed to restart ${u%.service}.service: Interactive authentication required." >&2; exit 1; fi
+    if [ ! -f "$f" ]; then echo "Failed to restart ${u%.service}.service: Unit ${u%.service}.service not found." >&2; exit 5; fi
+    if [ "$(get "$f" FailRestart)" = "1" ]; then
+      set_kv "$f" ActiveState failed; set_kv "$f" SubState failed; set_kv "$f" MainPID 0
+      echo "Job for ${u%.service}.service failed." >&2; exit 1
+    fi
+    if [ "$(get "$f" Frozen)" = "1" ]; then exit 0; fi   # "sucesso" falso: nada mudou
+    set_kv "$f" ActiveState active; set_kv "$f" SubState running
+    set_kv "$f" MainPID $((RANDOM + 1000)); set_kv "$f" ActiveEnterTimestampMonotonic "$(date +%s%N | cut -c1-15)" ;;
+  list-units)
+    for f in "$D"/*.state; do
+      n=$(basename "$f" .state); st=$(get "$f" ActiveState)
+      [ "$only_failed" = "1" ] && [ "$st" != "failed" ] && continue
+      echo "$n.service loaded $st $(get "$f" SubState) $(get "$f" Desc)"
+    done ;;
+  is-system-running)
+    if grep -qs '^ActiveState=failed' "$D"/*.state; then echo degraded; exit 1; else echo running; fi ;;
+  *) echo "fake-systemctl: comando não suportado: $*" >&2; exit 1 ;;
+esac
