@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nethub"
+version = "0.1.0"
+description = "NetHub - plataforma terminal-first para administração de infraestrutura (MVP)"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+nethub = "nethub.presentation.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nethub*"]

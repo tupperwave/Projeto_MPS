@@ -1,0 +1,59 @@
+"""Raiz de composição: monta o grafo de dependências (injeção manual)."""
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from pathlib import Path
+
+from .application.action_executor import ActionExecutor
+from .application.action_registry import ActionRegistry, ContextMenuService, registro_padrao
+from .application.capability_detector import CapabilityDetector
+from .application.discovery_service import DiscoveryService
+from .application.evidence_service import EvidenceService, HistoryService
+from .application.inventory_service import InventoryService
+from .domain.ports import NetworkScannerPort, RemoteExecutorPort
+from .infrastructure.nmap_adapter import NmapAdapter
+from .infrastructure.sqlite_db import SqliteDatabase
+from .infrastructure.sqlite_repositories import SqliteEvidenceRepository, SqliteHostRepository
+from .infrastructure.ssh_adapter import SshExecutor
+
+
+@dataclass
+class Container:
+    banco: SqliteDatabase
+    registro: ActionRegistry
+    inventario: InventoryService
+    descoberta: DiscoveryService
+    menu: ContextMenuService
+    executor: ActionExecutor
+    evidencias: EvidenceService
+    historico: HistoryService
+
+
+def caminho_padrao_db() -> Path:
+    return Path(os.environ.get("NETHUB_DB") or Path.home() / ".nethub" / "nethub.db")
+
+
+def criar_container(
+    caminho_db: str | Path | None = None,
+    usuario: str | None = None,
+    identidade: str | None = None,
+    scanner: NetworkScannerPort | None = None,
+    remoto: RemoteExecutorPort | None = None,
+) -> Container:
+    banco = SqliteDatabase(caminho_db or caminho_padrao_db())
+    repo_hosts = SqliteHostRepository(banco)
+    repo_evid = SqliteEvidenceRepository(banco)
+    evidencias = EvidenceService(repo_evid)
+    inventario = InventoryService(repo_hosts, CapabilityDetector())
+    registro = registro_padrao()
+    return Container(
+        banco=banco,
+        registro=registro,
+        inventario=inventario,
+        descoberta=DiscoveryService(scanner or NmapAdapter(), inventario, evidencias),
+        menu=ContextMenuService(registro),
+        executor=ActionExecutor(remoto or SshExecutor(usuario=usuario, identidade=identidade), evidencias),
+        evidencias=evidencias,
+        historico=HistoryService(repo_evid),
+    )
