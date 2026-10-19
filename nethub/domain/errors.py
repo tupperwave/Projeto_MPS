@@ -55,3 +55,7 @@ class SenhaInvalida(NetHubError):
 
 class UsuarioDuplicado(NetHubError):
     """Já existe um usuário com o mesmo login."""
+
+
+class FalhaPersistenciaUsuarios(NetHubError):
+    """Falha ao gravar ou consultar usuários no armazenamento permanente."""

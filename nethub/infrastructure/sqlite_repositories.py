@@ -9,10 +9,12 @@ from typing import Iterator
 from ..domain.enums import (
     NivelRisco, StatusCapacidade, StatusExecucao, TipoAcao, TipoCapacidade,
 )
+from ..domain.errors import FalhaPersistenciaUsuarios, UsuarioDuplicado
 from ..domain.models import (
     Capacidade, Evidencia, FiltroHistorico, Host, PortaServico, de_iso, para_iso,
 )
-from ..domain.ports import EvidenceRepository, HostRepository
+from ..domain.ports import EvidenceRepository, HostRepository, UserRepository
+from ..domain.users import Usuario
 from .sqlite_db import SqliteDatabase
 
 
@@ -156,3 +158,43 @@ class SqliteEvidenceRepository(EvidenceRepository):
             hash_anterior=r["hash_anterior"],
             hash_integridade=r["hash_integridade"],
         )
+
+
+class SqliteUserRepository(UserRepository):
+    """Persiste usuários no SQLite sem armazenar a senha original."""
+
+    def __init__(self, banco: SqliteDatabase) -> None:
+        self._db = banco
+
+    def salvar(self, usuario: Usuario) -> Usuario:
+        try:
+            self._db.executar(
+                "INSERT INTO usuarios (login, sal_senha, hash_senha) VALUES (?, ?, ?)",
+                (usuario.login, usuario._sal, usuario._hash_senha),
+            )
+            return usuario
+        except sqlite3.IntegrityError as exc:
+            raise UsuarioDuplicado(f"Já existe um usuário com o login {usuario.login!r}.") from exc
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaUsuarios("Não foi possível salvar o usuário no SQLite.") from exc
+
+    def buscar_por_login(self, login: str) -> Usuario | None:
+        try:
+            linhas = self._db.consultar("SELECT login, sal_senha, hash_senha FROM usuarios WHERE login = ?", (login,))
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaUsuarios("Não foi possível consultar o usuário no SQLite.") from exc
+        return self._para_usuario(linhas[0]) if linhas else None
+
+    def listar(self) -> list[Usuario]:
+        try:
+            linhas = self._db.consultar("SELECT login, sal_senha, hash_senha FROM usuarios ORDER BY login")
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaUsuarios("Não foi possível listar usuários no SQLite.") from exc
+        return [self._para_usuario(linha) for linha in linhas]
+
+    @staticmethod
+    def _para_usuario(linha: sqlite3.Row) -> Usuario:
+        try:
+            return Usuario.restaurar(linha["login"], linha["sal_senha"], linha["hash_senha"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise FalhaPersistenciaUsuarios("Os dados de usuário no SQLite estão inválidos.") from exc

@@ -38,6 +38,20 @@ class Usuario:
         object.__setattr__(self, "_sal", sal)
         object.__setattr__(self, "_hash_senha", hash_senha)
 
+    @classmethod
+    def restaurar(cls, login: str, sal: bytes, hash_senha: bytes) -> "Usuario":
+        """Reconstrói a entidade a partir dos dados persistidos, sem a senha original."""
+        login_validado = cls._validar_login(login)
+        if not isinstance(sal, bytes) or len(sal) != _SAL_BYTES:
+            raise ValueError("Sal de senha persistido inválido.")
+        if not isinstance(hash_senha, bytes) or len(hash_senha) != _HASH_BYTES:
+            raise ValueError("Hash de senha persistido inválido.")
+        usuario = object.__new__(cls)
+        object.__setattr__(usuario, "login", login_validado)
+        object.__setattr__(usuario, "_sal", sal)
+        object.__setattr__(usuario, "_hash_senha", hash_senha)
+        return usuario
+
     @staticmethod
     def _validar_login(login: str) -> str:
         if not isinstance(login, str):
