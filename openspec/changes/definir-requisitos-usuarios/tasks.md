@@ -12,11 +12,11 @@
 
 ## 3. Persistência permanente
 
-- [ ] 3.1 Implementar repositório SQLite para usuários, com migração e conversão de falhas de persistência; verificar gravação, leitura e propagação segura de erros.
+- [x] 3.1 Implementar repositório SQLite para usuários, com migração e conversão de falhas de persistência; verificar gravação, leitura e propagação segura de erros.
 
 ## 4. Seleção do mecanismo
 
-- [ ] 4.1 Permitir selecionar RAM ou SQLite durante a inicialização; verificar que o container usa o repositório selecionado.
+- [x] 4.1 Permitir selecionar RAM ou SQLite durante a inicialização; verificar que o container usa o repositório selecionado.
 
 ## 5. Interface e documentação de análise
 

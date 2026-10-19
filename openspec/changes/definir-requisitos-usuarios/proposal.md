@@ -10,7 +10,7 @@ As Sprints 1 e 2 pedem cadastro e listagem de usuários, validação de login e 
 - Documentar os dois modos de persistência e a seleção na inicialização.
 - Registrar o tratamento esperado para falhas de leitura e escrita.
 - Corrigir a rastreabilidade entre RF06, RF16, RF17 e UC10/UC11.
-- Implementar a entidade de usuário, as validações de login e senha e os casos de uso de cadastro/listagem sobre armazenamento em memória.
+- Implementar a entidade de usuário, as validações de login e senha, os casos de uso de cadastro/listagem em memória e o repositório SQLite selecionável na inicialização.
 
 ## Capacidades
 
@@ -23,7 +23,7 @@ As Sprints 1 e 2 pedem cadastro e listagem de usuários, validação de login e 
 - `docs/04-casos-de-uso/README.md`
 - Especificação OpenSpec de gerenciamento de usuários.
 - `nethub/domain/`, `nethub/application/`, `nethub/infrastructure/` e a raiz de composição da aplicação.
-- Persistência permanente, seleção entre backends e comandos de interface permanecem etapas futuras.
+- Comandos de interface e diagramas atualizados permanecem etapas futuras.
 
 ## Premissas
 

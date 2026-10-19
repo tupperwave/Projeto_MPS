@@ -16,7 +16,7 @@ from .domain.ports import NetworkScannerPort, RemoteExecutorPort
 from .infrastructure.nmap_adapter import NmapAdapter
 from .infrastructure.memory_user_repository import MemoryUserRepository
 from .infrastructure.sqlite_db import SqliteDatabase
-from .infrastructure.sqlite_repositories import SqliteEvidenceRepository, SqliteHostRepository
+from .infrastructure.sqlite_repositories import SqliteEvidenceRepository, SqliteHostRepository, SqliteUserRepository
 from .infrastructure.ssh_adapter import SshExecutor
 
 
@@ -43,6 +43,7 @@ def criar_container(
     identidade: str | None = None,
     scanner: NetworkScannerPort | None = None,
     remoto: RemoteExecutorPort | None = None,
+    persistencia_usuarios: str = "memoria",
 ) -> Container:
     banco = SqliteDatabase(caminho_db or caminho_padrao_db())
     repo_hosts = SqliteHostRepository(banco)
@@ -50,7 +51,13 @@ def criar_container(
     evidencias = EvidenceService(repo_evid)
     inventario = InventoryService(repo_hosts, CapabilityDetector())
     registro = registro_padrao()
-    usuarios = UserService(MemoryUserRepository())
+    if persistencia_usuarios == "memoria":
+        repo_usuarios = MemoryUserRepository()
+    elif persistencia_usuarios == "sqlite":
+        repo_usuarios = SqliteUserRepository(banco)
+    else:
+        raise ValueError("Persistência de usuários deve ser 'memoria' ou 'sqlite'.")
+    usuarios = UserService(repo_usuarios)
     return Container(
         banco=banco,
         registro=registro,
