@@ -46,6 +46,10 @@ def _imprimir(linhas: list[str]) -> None:
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="nethub", description="NetHub - administração de infraestrutura pelo terminal (MVP).")
     p.add_argument("--db", help="caminho do banco SQLite (padrão: $NETHUB_DB ou ~/.nethub/nethub.db)")
+    p.add_argument(
+        "--persistencia-usuarios", choices=("memoria", "sqlite"), default="memoria",
+        help="armazenamento de usuários (padrão: memoria)",
+    )
     sub = p.add_subparsers(dest="cmd", required=True)
 
     d = sub.add_parser("descobrir", help="varre uma rede com Nmap e atualiza o inventário (UC-01)")
@@ -110,7 +114,12 @@ def main(argv: list[str] | None = None, container: Container | None = None, entr
     if args.cmd == "exec":
         args.comando = restante or args.comando
     try:
-        c = container or criar_container(args.db, getattr(args, "usuario", None), getattr(args, "identidade", None))
+        c = container or criar_container(
+            args.db,
+            getattr(args, "usuario", None),
+            getattr(args, "identidade", None),
+            persistencia_usuarios=args.persistencia_usuarios,
+        )
         return _despachar(args, c, entrada)
     except NetHubError as exc:
         print(f"Erro: {exc}", file=sys.stderr)

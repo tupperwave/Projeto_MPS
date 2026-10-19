@@ -37,6 +37,14 @@ _MIGRACOES = [
     CREATE INDEX idx_evidencias_alvo ON evidencias(alvo);
     CREATE INDEX idx_evidencias_timestamp ON evidencias(timestamp);
     """,
+    # versão 2: usuários e credenciais derivadas
+    """
+    CREATE TABLE usuarios (
+        login TEXT PRIMARY KEY,
+        sal_senha BLOB NOT NULL,
+        hash_senha BLOB NOT NULL
+    );
+    """,
 ]
 
 

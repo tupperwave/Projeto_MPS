@@ -43,3 +43,19 @@ class ComandoInvalido(NetHubError):
 
 class TagInvalida(NetHubError):
     pass
+
+
+class LoginInvalido(NetHubError):
+    """Login ausente ou fora das regras de cadastro."""
+
+
+class SenhaInvalida(NetHubError):
+    """Senha fora das regras de cadastro."""
+
+
+class UsuarioDuplicado(NetHubError):
+    """Já existe um usuário com o mesmo login."""
+
+
+class FalhaPersistenciaUsuarios(NetHubError):
+    """Falha ao gravar ou consultar usuários no armazenamento permanente."""
