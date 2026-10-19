@@ -1,0 +1,23 @@
+[package]
+name = "nethub"
+version = "0.1.0"
+edition = "2021"
+description = "NetHub - plataforma terminal-first para administração de infraestrutura (protótipo MVP)"
+
+[dependencies]
+ratatui = "0.29"
+crossterm = "0.28"
+rusqlite = { version = "0.32", features = ["bundled"] }
+roxmltree = "0.20"
+sha2 = "0.10"
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+
+[profile.release]
+opt-level = 2
+lto = true
+strip = true
