@@ -1,6 +1,6 @@
 # Gerenciamento de usuários
 
-## Requirements
+## ADDED Requirements
 
 ### Requirement: RF06 — Cadastrar usuários
 O sistema DEVE permitir cadastrar usuários com login e senha válidos, usando o repositório associado ao modo de persistência selecionado na inicialização.
@@ -16,14 +16,16 @@ O sistema DEVE permitir cadastrar usuários com login e senha válidos, usando o
 - **AND** o sistema informa sucesso somente após a gravação ser concluída
 
 #### Scenario: Login inválido
-- **GIVEN** o login está vazio, tem mais de 12 caracteres ou contém número
+- **GIVEN** o login está vazio, tem mais de 12 caracteres ou contém números
 - **WHEN** o operador solicita o cadastro
 - **THEN** o sistema rejeita o usuário e informa a regra de login violada
 
 #### Scenario: Senha inválida
-- **GIVEN** a senha tem menos de 8 ou mais de 128 caracteres, contém menos de três dos quatro grupos exigidos, ou é igual ao login
+- **GIVEN** a senha tem menos de 8 ou mais de 128 caracteres, contém menos de três destes grupos — maiúsculas, minúsculas, números e caracteres não alfanuméricos — ou é igual ao login
 - **WHEN** o operador solicita o cadastro
 - **THEN** o sistema rejeita o usuário e informa a regra de senha violada
+
+**Regra da sprint:** a senha deve ser diferente do login. Essa exigência vem do enunciado da Sprint 2; não é apresentada como requisito da política padrão do AWS IAM.
 
 #### Scenario: Falha ao salvar usuário
 - **GIVEN** o repositório selecionado falha ao gravar o usuário
@@ -73,9 +75,3 @@ O sistema DEVE oferecer armazenamento de usuários em uma coleção mantida em m
 - **GIVEN** uma operação do repositório permanente falha por erro de entrada ou saída
 - **WHEN** o sistema lê ou grava usuários
 - **THEN** a falha é tratada e comunicada sem indicar sucesso da operação
-
-## Regras de validação
-
-- Login: não vazio, no máximo 12 caracteres e sem números.
-- Senha: entre 8 e 128 caracteres, com pelo menos três destes quatro grupos: letras maiúsculas, letras minúsculas, números e caracteres não alfanuméricos.
-- A senha deve ser diferente do login, conforme o enunciado da Sprint 2. Essa regra adicional não é apresentada como requisito da política padrão do AWS IAM.
