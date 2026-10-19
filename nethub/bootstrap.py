@@ -11,8 +11,10 @@ from .application.capability_detector import CapabilityDetector
 from .application.discovery_service import DiscoveryService
 from .application.evidence_service import EvidenceService, HistoryService
 from .application.inventory_service import InventoryService
+from .application.user_service import UserService
 from .domain.ports import NetworkScannerPort, RemoteExecutorPort
 from .infrastructure.nmap_adapter import NmapAdapter
+from .infrastructure.memory_user_repository import MemoryUserRepository
 from .infrastructure.sqlite_db import SqliteDatabase
 from .infrastructure.sqlite_repositories import SqliteEvidenceRepository, SqliteHostRepository
 from .infrastructure.ssh_adapter import SshExecutor
@@ -28,6 +30,7 @@ class Container:
     executor: ActionExecutor
     evidencias: EvidenceService
     historico: HistoryService
+    usuarios: UserService
 
 
 def caminho_padrao_db() -> Path:
@@ -47,6 +50,7 @@ def criar_container(
     evidencias = EvidenceService(repo_evid)
     inventario = InventoryService(repo_hosts, CapabilityDetector())
     registro = registro_padrao()
+    usuarios = UserService(MemoryUserRepository())
     return Container(
         banco=banco,
         registro=registro,
@@ -56,4 +60,5 @@ def criar_container(
         executor=ActionExecutor(remoto or SshExecutor(usuario=usuario, identidade=identidade), evidencias),
         evidencias=evidencias,
         historico=HistoryService(repo_evid),
+        usuarios=usuarios,
     )

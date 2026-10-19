@@ -7,6 +7,7 @@ from typing import Iterator
 
 from .enums import NivelRisco, TipoConfirmacao
 from .models import AlvoRede, Evidencia, FiltroHistorico, Host, ResultadoExecucao
+from .users import Usuario
 
 
 class NetworkScannerPort(ABC):
@@ -50,6 +51,17 @@ class EvidenceRepository(ABC):
 
     @abstractmethod
     def todas_em_ordem(self) -> Iterator[Evidencia]: ...
+
+
+class UserRepository(ABC):
+    @abstractmethod
+    def salvar(self, usuario: Usuario) -> Usuario: ...
+
+    @abstractmethod
+    def buscar_por_login(self, login: str) -> Usuario | None: ...
+
+    @abstractmethod
+    def listar(self) -> list[Usuario]: ...
 
 
 @dataclass(frozen=True)

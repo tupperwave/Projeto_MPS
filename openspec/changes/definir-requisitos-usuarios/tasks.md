@@ -7,8 +7,8 @@
 
 ## 2. Cadastro e listagem em memória
 
-- [ ] 2.1 Definir a porta de repositório de usuários e implementar adaptador em memória com coleção; verificar gravação, consulta, listagem e rejeição de login duplicado.
-- [ ] 2.2 Implementar serviço de cadastro/listagem e injetá-lo no container usando o adaptador em memória; verificar que cadastrar e listar pela camada de aplicação produz os usuários esperados sem expor hashes na saída pública.
+- [x] 2.1 Definir a porta de repositório de usuários e implementar adaptador em memória com coleção; revisar os caminhos de gravação, consulta, listagem e rejeição de login duplicado.
+- [x] 2.2 Implementar serviço de cadastro/listagem e injetá-lo no container usando o adaptador em memória; revisar o fluxo pela camada de aplicação e confirmar que a representação pública não exibe hashes.
 
 ## 3. Persistência permanente
 
