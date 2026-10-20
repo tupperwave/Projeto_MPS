@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Administrador
+actor "Operador autorizado" as Operador
+
+rectangle "NetHub" {
+    usecase "Selecionar modo de persistência\n(RAM ou SQLite)\nRF17" as Selecionar
+    usecase "Cadastrar usuário\nUC10 / RF06" as Cadastrar
+    usecase "Validar login e senha" as Validar
+    usecase "Listar usuários\nUC11 / RF16" as Listar
+    usecase "Informar erro de validação" as ErroValidacao
+    usecase "Informar falha de persistência" as ErroPersistencia
+}
+
+Administrador -- Selecionar
+Administrador -- Cadastrar
+Administrador -- Listar
+Operador -- Cadastrar
+Operador -- Listar
+
+Cadastrar ..> Validar : <<include>>
+ErroValidacao ..> Cadastrar : <<extend>>
+ErroPersistencia ..> Cadastrar : <<extend>>
+ErroPersistencia ..> Listar : <<extend>>
+
+note right of Selecionar
+  A escolha é feita na inicialização.
+  O padrão da aplicação é RAM.
+end note
+
+note bottom of Administrador
+  Perfis previstos nos casos de uso.
+  Autenticação e autorização por perfil
+  não estão implementadas.
+end note
+@enduml

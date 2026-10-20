@@ -17,7 +17,11 @@
 - [UC13](uc13.md)
 - [UC14](uc14.md)
 
-## Diagrama de casos de uso — gerenciamento de usuários
+## Diagrama UML de casos de uso — gerenciamento de usuários
+
+Fonte PlantUML: [diagrama-usuarios.puml](diagrama-usuarios.puml). Ela apresenta os atores Administrador e Operador autorizado e os casos de uso UC10, UC11 e RF17.
+
+## Visão funcional — gerenciamento de usuários
 
 ```mermaid
 flowchart LR
