@@ -27,9 +27,13 @@ Os arquivos-fonte originais e o PDF anterior foram preservados em `docs/03-elici
 
 O cadastro solicita a senha sem exibi-la; a listagem mostra somente os logins.
 
+Na raiz do repositório, execute diretamente pelo Python:
+
 ```bash
-nethub --persistencia-usuarios sqlite usuarios cadastrar ana
-nethub --persistencia-usuarios sqlite usuarios listar
+python3 -m nethub --persistencia-usuarios sqlite usuarios cadastrar ana
+python3 -m nethub --persistencia-usuarios sqlite usuarios listar
 ```
+
+Para habilitar o comando `nethub` no shell, instale o projeto na raiz do repositório com `python3 -m pip install -e .`. Depois, os comandos podem ser chamados sem `python3 -m nethub`.
 
 Use `--persistencia-usuarios memoria` para manter os cadastros apenas durante a execução. Sem a opção, a CLI usa memória.
