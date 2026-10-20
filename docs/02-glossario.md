@@ -7,6 +7,8 @@
 | TUI | Interface interativa de terminal com navegação por teclado. |
 | Agentless | Abordagem sem agente próprio instalado nos hosts; ainda pode depender de ferramentas externas. |
 | Operador | Pessoa que define o escopo e utiliza o sistema para consultar ou administrar hosts. |
+| Administrador | Ator responsável por configurar o sistema e executar os fluxos de gerenciamento previstos. |
+| Operador autorizado | Ator autorizado pela organização a utilizar as operações disponibilizadas pelo NetHub. |
 | Host | Dispositivo identificado na rede. |
 | Inventário | Registro de hosts e dados observados, que pode ficar desatualizado. |
 | CIDR | Notação que delimita um bloco de endereços IP. |

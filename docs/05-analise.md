@@ -12,12 +12,21 @@ O diagrama de classes fornecido pela equipe está preservado como Mermaid em [`a
 classDiagram
     direction LR
 
-    class CLI
-    class TUI
+    class CliUsuarios {
+        <<boundary>>
+        +cadastrar(login)
+        +listar()
+    }
+    class TuiUsuarios {
+        <<boundary>>
+        +cadastrar(login)
+        +listar()
+    }
     class Container {
         +criar_container(persistencia_usuarios)
     }
     class UserService {
+        <<control>>
         +cadastrar(login, senha) Usuario
         +listar() List~Usuario~
     }
@@ -28,6 +37,7 @@ classDiagram
         +listar() List~Usuario~
     }
     class Usuario {
+        <<entity>>
         +login: str
         -sal: bytes
         -hash_senha: bytes
@@ -46,8 +56,8 @@ classDiagram
     class FalhaPersistenciaUsuarios
     class NetHubError
 
-    CLI --> UserService
-    TUI --> UserService
+    CliUsuarios --> UserService
+    TuiUsuarios --> UserService
     Container --> UserService : injeta
     UserService --> UserRepository
     UserService ..> Usuario : cria e lista

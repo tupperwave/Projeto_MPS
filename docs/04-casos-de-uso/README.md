@@ -21,7 +21,8 @@
 
 ```mermaid
 flowchart LR
-    operador([Administrador / operador])
+    administrador([Administrador])
+    operador([Operador autorizado])
     subgraph nethub[NetHub]
         iniciar[Selecionar persistência na inicialização - RF17]
         cadastrar[Cadastrar usuário - UC10 / RF06]
@@ -32,7 +33,9 @@ flowchart LR
         memoria[Memória RAM]
         sqlite[(SQLite)]
     end
-    operador --> iniciar
+    administrador --> iniciar
+    administrador --> cadastrar
+    administrador --> listar
     operador --> cadastrar
     operador --> listar
     cadastrar --> validacao --> repo
@@ -45,3 +48,5 @@ flowchart LR
 ```
 
 O diagrama cobre RF06, RF16 e RF17. O diagrama geral do produto ainda precisa ser elaborado e revisado pela equipe.
+
+Os dois atores são perfis de uso previstos nos casos de uso; autenticação e autorização por perfil não fazem parte desta implementação.

@@ -18,7 +18,7 @@ As fontes atuais descrevem descoberta de rede, inventário, classificação de c
 
 ## 1.5 Limites e usuários
 
-O material atual aponta como usuário o operador/administrador responsável por selecionar hosts e executar operações. O PDF legado contém escopo e perfis adicionais; esses pontos ainda precisam ser reconciliados com a definição atual do produto antes de serem tratados como linha de base.
+Os casos de uso de gerenciamento de usuários consideram dois perfis de ator: administrador e operador autorizado. Eles representam papéis previstos para os fluxos; autenticação e autorização por perfil ainda não estão implementadas. O PDF legado contém outros perfis e escopos, que precisam ser reconciliados antes de serem tratados como linha de base.
 
 ## 1.6 Fontes e pendências
 

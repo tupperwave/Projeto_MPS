@@ -5,7 +5,7 @@
 ### Requirement: RF06 — Cadastrar usuários
 O sistema DEVE permitir cadastrar usuários com login e senha válidos, usando o repositório associado ao modo de persistência selecionado na inicialização.
 
-**Prioridade:** Essencial  
+**Prioridade:** Essencial
 **Casos de uso:** UC10
 
 #### Scenario: Cadastro com dados válidos
@@ -75,3 +75,22 @@ O sistema DEVE oferecer armazenamento de usuários em uma coleção mantida em m
 - **GIVEN** uma operação do repositório permanente falha por erro de entrada ou saída
 - **WHEN** o sistema lê ou grava usuários
 - **THEN** a falha é tratada e comunicada sem indicar sucesso da operação
+
+### Requirement: NF-SE-03 — Proteção de credenciais de usuários
+O sistema DEVE proteger as senhas dos usuários durante a entrada, o armazenamento e a apresentação, mantendo credenciais originais fora das saídas e dos dados persistidos.
+
+**Prioridade:** Essencial
+
+**Casos de uso:** UC10, UC11
+
+#### Scenario: Armazenamento de senha protegida
+- **GIVEN** o operador cadastra um usuário com uma senha válida
+- **WHEN** o repositório grava o usuário
+- **THEN** o repositório armazena somente um hash derivado com salt aleatório
+- **AND** a senha original não aparece nos dados persistidos
+
+#### Scenario: Credenciais ocultas na interface
+- **GIVEN** o operador cadastra ou lista usuários pela CLI ou TUI
+- **WHEN** o sistema solicita a senha, apresenta a listagem ou comunica um erro
+- **THEN** a senha digitada não é exibida
+- **AND** a senha, o salt e o hash não aparecem nas mensagens ou na listagem
