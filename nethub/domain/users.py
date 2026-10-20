@@ -11,7 +11,6 @@ from .errors import LoginInvalido, SenhaInvalida
 _TAMANHO_MIN_SENHA = 8
 _TAMANHO_MAX_SENHA = 128
 _TAMANHO_MAX_LOGIN = 12
-_GRUPOS_ESPECIAIS = frozenset("!@#$%^&*()_+-=[]{}|'")
 _SAL_BYTES = 16
 _HASH_BYTES = 32
 _SCRYPT_N = 1 << 17
@@ -78,7 +77,7 @@ class Usuario:
             any("A" <= caractere <= "Z" for caractere in senha),
             any("a" <= caractere <= "z" for caractere in senha),
             any("0" <= caractere <= "9" for caractere in senha),
-            any(caractere in _GRUPOS_ESPECIAIS for caractere in senha),
+            any(not caractere.isalnum() for caractere in senha),
         )
         if sum(grupos) < 3:
             raise SenhaInvalida("A senha deve conter pelo menos três dos quatro grupos de caracteres.")

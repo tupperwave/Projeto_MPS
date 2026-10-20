@@ -55,13 +55,17 @@ class SqliteDatabase:
             caminho = Path(caminho).expanduser()
             caminho.parent.mkdir(parents=True, exist_ok=True)
         self._con = sqlite3.connect(str(caminho))
-        self._con.row_factory = sqlite3.Row
-        if not self._memoria:
-            try:
-                os.chmod(caminho, 0o600)  # evidências podem conter saída de comandos
-            except OSError:
-                pass
-        self.migrar()
+        try:
+            self._con.row_factory = sqlite3.Row
+            if not self._memoria:
+                try:
+                    os.chmod(caminho, 0o600)  # evidências podem conter saída de comandos
+                except OSError:
+                    pass
+            self.migrar()
+        except (OSError, sqlite3.Error):
+            self._con.close()
+            raise
 
     def migrar(self) -> None:
         versao = self._con.execute("PRAGMA user_version").fetchone()[0]

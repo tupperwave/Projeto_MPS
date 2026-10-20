@@ -32,3 +32,8 @@
 - [x] 7.1 Mostrar pelo menos dois perfis de ator no diagrama de casos de uso e marcar fronteira, controle e entidade no diagrama de classes de análise.
 - [x] 7.2 Especificar proteção das credenciais como requisito não funcional com cenários verificáveis e cobertura correspondente nos testes.
 - [x] 7.3 Registrar que não houve elicitação formal, sem atribuir técnicas, datas ou participantes inexistentes.
+
+## 8. Correções após verificação da rubrica
+
+- [x] 8.1 Contar qualquer caractere não alfanumérico no grupo especial da política de senha e cobrir a regra com teste de regressão.
+- [x] 8.2 Converter falhas ao criar diretórios, abrir a conexão e executar migrações SQLite em erro tratável pela CLI; cobrir falha de inicialização com teste.

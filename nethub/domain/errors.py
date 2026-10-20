@@ -59,3 +59,7 @@ class UsuarioDuplicado(NetHubError):
 
 class FalhaPersistenciaUsuarios(NetHubError):
     """Falha ao gravar ou consultar usuários no armazenamento permanente."""
+
+
+class FalhaBancoDados(NetHubError):
+    """Falha ao abrir ou preparar o banco de dados local."""
