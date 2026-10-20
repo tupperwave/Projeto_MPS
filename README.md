@@ -22,3 +22,14 @@ Repositório da equipe para a disciplina Métodos e Projeto de Software. A docum
 - [Requisitos vigentes](openspec/specs/)
 
 Os arquivos-fonte originais e o PDF anterior foram preservados em `docs/03-elicitacao/anexos/`. Onde as fontes divergem ou não definem critérios suficientes, a documentação sinaliza a pendência em vez de inventar uma decisão.
+
+## Gerenciar usuários
+
+O cadastro solicita a senha sem exibi-la; a listagem mostra somente os logins.
+
+```bash
+nethub --persistencia-usuarios sqlite usuarios cadastrar ana
+nethub --persistencia-usuarios sqlite usuarios listar
+```
+
+Use `--persistencia-usuarios memoria` para manter os cadastros apenas durante a execução. Sem a opção, a CLI usa memória.

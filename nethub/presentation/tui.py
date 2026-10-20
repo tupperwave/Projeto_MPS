@@ -81,7 +81,9 @@ class Terminal:
         while self.tecla() is None:
             pass
 
-    def pedir_texto(self, prompt: str, linhas_acima: list[str] | None = None) -> str | None:
+    def pedir_texto(
+        self, prompt: str, linhas_acima: list[str] | None = None, *, ocultar: bool = False
+    ) -> str | None:
         """Lê uma linha. Enter confirma, Esc cancela (retorna None)."""
         buf = ""
         while True:
@@ -89,7 +91,8 @@ class Terminal:
             self._t.erase()
             for i, l in enumerate(linhas_acima or []):
                 self._escrever(1 + i, 2, l)
-            self._escrever(h - 1, 0, prompt + buf + "▏", curses.A_BOLD)
+            exibido = "•" * len(buf) if ocultar else buf
+            self._escrever(h - 1, 0, prompt + exibido + "▏", curses.A_BOLD)
             self._t.refresh()
             t = self.tecla()
             if t is None or t == curses.KEY_RESIZE:
@@ -156,7 +159,7 @@ class TelaTexto(Tela):
 class TelaHosts(Tela):
     titulo = "Hosts"
     selecionavel = True
-    rodape = "↑↓ navegar  Enter detalhes  d descobrir  h histórico  t filtrar por tag  r atualizar  q sair"
+    rodape = "↑↓ navegar  Enter detalhes  d descobrir  h histórico  u usuários  t filtrar  r atualizar  q sair"
 
     def __init__(self, app: "NetHubTui") -> None:
         super().__init__()
@@ -191,6 +194,8 @@ class TelaHosts(Tela):
                 self.recarregar(app)
         elif tecla == "h":
             app.empilhar(TelaHistorico(app))
+        elif tecla == "u":
+            app.empilhar(TelaUsuarios(app))
         elif tecla in ENTER and self.hosts:
             app.empilhar(TelaDetalheHost(self.hosts[min(self.indice, len(self.hosts) - 1)].ip, app))
         else:
@@ -228,6 +233,42 @@ class TelaDetalheHost(Tela):
                 self.recarregar(app)
             return True
         return False
+
+
+class TelaUsuarios(Tela):
+    titulo = "Usuários"
+    selecionavel = True
+    rodape = "c cadastrar  r atualizar  q/Esc voltar"
+
+    def __init__(self, app: "NetHubTui") -> None:
+        super().__init__()
+        self.usuarios = []
+        self.recarregar(app)
+
+    def recarregar(self, app: "NetHubTui") -> None:
+        self.usuarios = app.c.usuarios.listar()
+        self._linhas = [usuario.login for usuario in self.usuarios]
+
+    def itens(self) -> list[str]:
+        return self._linhas or ["(nenhum usuário cadastrado)"]
+
+    def tratar_tecla(self, tecla, app: "NetHubTui") -> bool:
+        if tecla == "r":
+            self.recarregar(app)
+            app.status = "Lista de usuários atualizada."
+        elif tecla == "c":
+            login = app.t.pedir_texto("Login (Esc cancela): ")
+            if login is None:
+                return True
+            senha = app.t.pedir_texto("Senha (oculta, Esc cancela): ", ocultar=True)
+            if senha is None:
+                return True
+            usuario = app.c.usuarios.cadastrar(login, senha)
+            self.recarregar(app)
+            app.status = f"Usuário {usuario.login!r} cadastrado com sucesso."
+        else:
+            return False
+        return True
 
 
 class TelaHistorico(Tela):

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import shlex
 import sys
 from datetime import datetime, time as hora
@@ -83,6 +84,12 @@ def _parser() -> argparse.ArgumentParser:
 
     sub.add_parser("verificar-auditoria", help="verifica a integridade da cadeia de evidências")
 
+    usuarios = sub.add_parser("usuarios", help="cadastra e lista usuários")
+    usuarios_sub = usuarios.add_subparsers(dest="usuarios_cmd", required=True)
+    cadastrar = usuarios_sub.add_parser("cadastrar", help="cadastra um usuário")
+    cadastrar.add_argument("login")
+    usuarios_sub.add_parser("listar", help="lista usuários cadastrados")
+
     t = sub.add_parser("tag", help="organiza hosts com tags (UC-09)")
     t.add_argument("operacao", choices=["add", "rm"])
     t.add_argument("ip")
@@ -130,6 +137,21 @@ def main(argv: list[str] | None = None, container: Container | None = None, entr
 
 
 def _despachar(args, c: Container, entrada) -> int:
+    if args.cmd == "usuarios":
+        if args.usuarios_cmd == "cadastrar":
+            senha = getpass.getpass("Senha: ")
+            c.usuarios.cadastrar(args.login, senha)
+            print(f"Usuário {args.login!r} cadastrado com sucesso.")
+            return COD_OK
+        usuarios = c.usuarios.listar()
+        if not usuarios:
+            print("Nenhum usuário cadastrado.")
+            return COD_OK
+        print("Usuários cadastrados:")
+        for usuario in usuarios:
+            print(f"- {usuario.login}")
+        return COD_OK
+
     if args.cmd == "descobrir":
         alvo = AlvoRede.criar(args.alvo)
         autorizado = args.autorizado
