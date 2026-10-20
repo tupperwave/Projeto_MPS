@@ -26,3 +26,8 @@
 ## 6. Cobertura de testes
 
 - [x] 6.1 Cobrir validações, hash, cadastro/listagem em RAM, duplicidade, SQLite e falhas de persistência; verificar a suíte completa com `python3 -m unittest discover -v`.
+
+## 7. Conferência da rubrica das Sprints 1 e 2
+
+- [x] 7.1 Mostrar pelo menos dois perfis de ator no diagrama de casos de uso e marcar fronteira, controle e entidade no diagrama de classes de análise.
+- [x] 7.2 Especificar proteção das credenciais como requisito não funcional com cenários verificáveis e cobertura correspondente nos testes.
