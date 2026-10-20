@@ -2,7 +2,7 @@
 
 ## Context
 
-A aplicação separa domínio, aplicação e infraestrutura. O domínio contém entidades e exceções; contratos de repositório ficam em `nethub/domain/ports.py`; serviços de aplicação recebem esses contratos; `nethub/bootstrap.py` monta o container. Não há entidade nem repositório de usuários. Ver `specs/gestao-de-usuarios/spec.md` para regras e cenários.
+A aplicação separa domínio, aplicação, portas e adaptadores de infraestrutura. O domínio contém a entidade `Usuario` e exceções; contratos de repositório ficam em `nethub/domain/ports.py`; `UserService` recebe o contrato; `nethub/bootstrap.py` monta o container. A CLI e a TUI oferecem cadastro e listagem. Ver `specs/gestao-de-usuarios/spec.md` para regras e cenários.
 
 ## Goals / Non-Goals
 
@@ -12,8 +12,7 @@ A aplicação separa domínio, aplicação e infraestrutura. O domínio contém 
 - Evitar expor a senha original pela entidade, sua representação ou pela listagem.
 
 **Non-Goals:**
-- Comandos CLI/TUI para cadastro e listagem e autenticação interativa.
-- Atualização e remoção de usuários.
+- Autenticação interativa, atualização e remoção de usuários.
 
 ## Decisions
 
@@ -24,6 +23,8 @@ A aplicação separa domínio, aplicação e infraestrutura. O domínio contém 
 - Declarar `UserRepository` em `domain/ports.py`, implementar `MemoryUserRepository` e `SqliteUserRepository` em `infrastructure/`, e fornecer `UserService` em `application/` para cadastrar e listar.
 - Persistir em SQLite somente login, salt e hash; usar a tabela criada pela migração versionada do banco existente. Converter falhas SQLite de gravação e consulta em erro de domínio e preservar a distinção para login duplicado.
 - Permitir a seleção por `--persistencia-usuarios memoria|sqlite` na inicialização da CLI, com memória como padrão para preservar o comportamento atual. O container recebe a opção e injeta o repositório correspondente.
+- Na CLI, solicitar a senha com entrada sem eco; na TUI, mascarar os caracteres digitados. As duas interfaces exibem somente o login na listagem e nunca mostram salt ou hash.
+- Representar a relação entre RF06, RF16 e RF17 em um diagrama de casos de uso e um diagrama de classes complementar, sem substituir o diagrama original preservado.
 
 ## Risks / Trade-offs
 

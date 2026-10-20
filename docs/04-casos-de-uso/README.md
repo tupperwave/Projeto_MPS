@@ -16,4 +16,32 @@
 - [UC12](uc12.md)
 - [UC13](uc13.md)
 - [UC14](uc14.md)
-O diagrama geral de casos de uso ainda precisa ser elaborado e revisado pela equipe.
+
+## Diagrama de casos de uso — gerenciamento de usuários
+
+```mermaid
+flowchart LR
+    operador([Administrador / operador])
+    subgraph nethub[NetHub]
+        iniciar[Selecionar persistência na inicialização - RF17]
+        cadastrar[Cadastrar usuário - UC10 / RF06]
+        listar[Listar usuários - UC11 / RF16]
+        validacao[Validar login e senha]
+        erros[Informar validação, duplicidade ou falha de persistência]
+        repo[(Repositório selecionado)]
+        memoria[Memória RAM]
+        sqlite[(SQLite)]
+    end
+    operador --> iniciar
+    operador --> cadastrar
+    operador --> listar
+    cadastrar --> validacao --> repo
+    listar --> repo
+    repo --> memoria
+    repo --> sqlite
+    validacao -. entrada inválida .-> erros
+    repo -. falha ou login duplicado .-> erros
+    repo -->|retorna somente login| listar
+```
+
+O diagrama cobre RF06, RF16 e RF17. O diagrama geral do produto ainda precisa ser elaborado e revisado pela equipe.
