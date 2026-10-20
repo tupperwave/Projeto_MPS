@@ -37,6 +37,10 @@ class TestUsuario(unittest.TestCase):
         with self.assertRaises(SenhaInvalida):
             Usuario("Abc!defG", "Abc!defG")
 
+    def test_qualquer_caractere_nao_alfanumerico_conta_como_especial(self):
+        usuario = Usuario("ana", "Abcdefg?")
+        self.assertEqual("ana", usuario.login)
+
     def test_hash_verificacao_e_representacao(self):
         usuario = Usuario("ana", SENHA)
         self.assertTrue(usuario.verificar_senha(SENHA))
@@ -150,6 +154,23 @@ class TestCliUsuarios(unittest.TestCase):
         self.assertIn("Erro:", erro)
         self.assertNotIn("fraca", erro)
         c.banco.fechar()
+
+    def test_falha_ao_inicializar_sqlite_exibe_erro_amigavel(self):
+        with tempfile.TemporaryDirectory() as pasta:
+            arquivo = Path(pasta) / "nao-e-diretorio"
+            arquivo.write_text("arquivo")
+            banco_corrompido = Path(pasta) / "corrompido.db"
+            banco_corrompido.write_text("não é um banco SQLite")
+
+            for caminho_db in (arquivo / "nethub.db", banco_corrompido):
+                with self.subTest(caminho_db=caminho_db):
+                    codigo, saida, erro = self.rodar(
+                        None, "--db", str(caminho_db), "--persistencia-usuarios", "sqlite", "usuarios", "listar"
+                    )
+                    self.assertEqual(2, codigo)
+                    self.assertEqual("", saida)
+                    self.assertIn("Erro: Não foi possível abrir ou inicializar o banco SQLite.", erro)
+                    self.assertNotIn("Traceback", erro)
 
 
 class TestTelaUsuarios(unittest.TestCase):

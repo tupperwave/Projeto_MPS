@@ -22,6 +22,7 @@ A aplicação separa domínio, aplicação, portas e adaptadores de infraestrutu
 - Acrescentar erros específicos de domínio para login/senha inválidos e login duplicado. A camada de aplicação traduz as regras de cadastro para esses erros sem incluir a senha nas mensagens.
 - Declarar `UserRepository` em `domain/ports.py`, implementar `MemoryUserRepository` e `SqliteUserRepository` em `infrastructure/`, e fornecer `UserService` em `application/` para cadastrar e listar.
 - Persistir em SQLite somente login, salt e hash; usar a tabela criada pela migração versionada do banco existente. Converter falhas SQLite de gravação e consulta em erro de domínio e preservar a distinção para login duplicado.
+- Considerar qualquer caractere não alfanumérico como pertencente ao quarto grupo da regra de senha. Converter também falhas de criação do diretório, conexão e migração do banco em erro de domínio tratável pela CLI, fechando a conexão se a inicialização falhar.
 - Permitir a seleção por `--persistencia-usuarios memoria|sqlite` na inicialização da CLI, com memória como padrão para preservar o comportamento atual. O container recebe a opção e injeta o repositório correspondente.
 - Na CLI, solicitar a senha com entrada sem eco; na TUI, mascarar os caracteres digitados. As duas interfaces exibem somente o login na listagem e nunca mostram salt ou hash.
 - Representar a relação entre RF06, RF16 e RF17 em um diagrama de casos de uso e um diagrama de classes complementar, sem substituir o diagrama original preservado.

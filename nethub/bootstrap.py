@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from .application.discovery_service import DiscoveryService
 from .application.evidence_service import EvidenceService, HistoryService
 from .application.inventory_service import InventoryService
 from .application.user_service import UserService
+from .domain.errors import FalhaBancoDados
 from .domain.ports import NetworkScannerPort, RemoteExecutorPort
 from .infrastructure.nmap_adapter import NmapAdapter
 from .infrastructure.memory_user_repository import MemoryUserRepository
@@ -45,7 +47,10 @@ def criar_container(
     remoto: RemoteExecutorPort | None = None,
     persistencia_usuarios: str = "memoria",
 ) -> Container:
-    banco = SqliteDatabase(caminho_db or caminho_padrao_db())
+    try:
+        banco = SqliteDatabase(caminho_db or caminho_padrao_db())
+    except (OSError, sqlite3.Error) as exc:
+        raise FalhaBancoDados("Não foi possível abrir ou inicializar o banco SQLite.") from exc
     repo_hosts = SqliteHostRepository(banco)
     repo_evid = SqliteEvidenceRepository(banco)
     evidencias = EvidenceService(repo_evid)
