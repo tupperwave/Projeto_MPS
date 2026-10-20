@@ -4,7 +4,68 @@
 
 O diagrama de classes fornecido pela equipe está preservado como Mermaid em [`anexos/fontes/diagrama-de-classes-original.mmd`](03-elicitacao/anexos/fontes/diagrama-de-classes-original.mmd). Ele propõe camadas de apresentação, aplicação, domínio, portas e infraestrutura.
 
-> Revisar o diagrama com os casos de uso e requisitos vigentes antes de considerá-lo validado como modelo de análise.
+> O diagrama preservado abaixo é a fonte original da equipe. O modelo complementar de usuários, alinhado aos casos de uso e requisitos vigentes, está apresentado a seguir.
+
+### Modelo de classes — gerenciamento de usuários
+
+```mermaid
+classDiagram
+    direction LR
+
+    class CLI
+    class TUI
+    class Container {
+        +criar_container(persistencia_usuarios)
+    }
+    class UserService {
+        +cadastrar(login, senha) Usuario
+        +listar() List~Usuario~
+    }
+    class UserRepository {
+        <<interface>>
+        +salvar(usuario) Usuario
+        +buscar_por_login(login) Usuario
+        +listar() List~Usuario~
+    }
+    class Usuario {
+        +login: str
+        -sal: bytes
+        -hash_senha: bytes
+        +verificar_senha(senha) bool
+    }
+    class MemoryUserRepository
+    class SqliteUserRepository
+    class SqliteDatabase {
+        +migrar()
+        +executar(sql, params)
+        +consultar(sql, params)
+    }
+    class LoginInvalido
+    class SenhaInvalida
+    class UsuarioDuplicado
+    class FalhaPersistenciaUsuarios
+    class NetHubError
+
+    CLI --> UserService
+    TUI --> UserService
+    Container --> UserService : injeta
+    UserService --> UserRepository
+    UserService ..> Usuario : cria e lista
+    MemoryUserRepository ..|> UserRepository
+    SqliteUserRepository ..|> UserRepository
+    SqliteUserRepository --> SqliteDatabase
+    LoginInvalido --|> NetHubError
+    SenhaInvalida --|> NetHubError
+    UsuarioDuplicado --|> NetHubError
+    FalhaPersistenciaUsuarios --|> NetHubError
+    Usuario ..> LoginInvalido : valida login
+    Usuario ..> SenhaInvalida : valida senha
+    MemoryUserRepository ..> UsuarioDuplicado
+    SqliteUserRepository ..> UsuarioDuplicado
+    SqliteUserRepository ..> FalhaPersistenciaUsuarios
+```
+
+O `Container` escolhe `MemoryUserRepository` ou `SqliteUserRepository`. A entidade guarda o salt e o hash derivados, e a apresentação expõe somente o login.
 
 
 ```mermaid
