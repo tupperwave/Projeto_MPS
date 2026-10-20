@@ -20,9 +20,9 @@
 
 ## 5. Interface e documentação de análise
 
-- [ ] 5.1 Integrar cadastro e listagem à CLI/TUI sem mostrar senha ou hash; verificar mensagens de sucesso, lista vazia e erro.
-- [ ] 5.2 Atualizar diagramas de casos de uso e classes com fronteira, controle, entidade, exceções e os dois mecanismos; conferir rastreabilidade com RF06, RF16 e RF17.
+- [x] 5.1 Integrar cadastro e listagem à CLI/TUI sem mostrar senha ou hash; verificar mensagens de sucesso, lista vazia e erro.
+- [x] 5.2 Atualizar diagramas de casos de uso e classes com fronteira, controle, entidade, exceções e os dois mecanismos; conferir rastreabilidade com RF06, RF16 e RF17.
 
 ## 6. Cobertura de testes
 
-- [ ] 6.1 Cobrir validações, hash, cadastro/listagem em RAM, duplicidade, SQLite e falhas de persistência; verificar a suíte completa com `python3 -m unittest discover -v`.
+- [x] 6.1 Cobrir validações, hash, cadastro/listagem em RAM, duplicidade, SQLite e falhas de persistência; verificar a suíte completa com `python3 -m unittest discover -v`.
