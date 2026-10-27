@@ -12,13 +12,16 @@ from .application.capability_detector import CapabilityDetector
 from .application.discovery_service import DiscoveryService
 from .application.evidence_service import EvidenceService, HistoryService
 from .application.inventory_service import InventoryService
+from .application.annotation_service import HostAnnotationService
 from .application.user_service import UserService
 from .domain.errors import FalhaBancoDados
 from .domain.ports import NetworkScannerPort, RemoteExecutorPort
 from .infrastructure.nmap_adapter import NmapAdapter
 from .infrastructure.memory_user_repository import MemoryUserRepository
 from .infrastructure.sqlite_db import SqliteDatabase
-from .infrastructure.sqlite_repositories import SqliteEvidenceRepository, SqliteHostRepository, SqliteUserRepository
+from .infrastructure.sqlite_repositories import (
+    SqliteEvidenceRepository, SqliteHostAnnotationRepository, SqliteHostRepository, SqliteUserRepository,
+)
 from .infrastructure.ssh_adapter import SshExecutor
 
 
@@ -33,6 +36,7 @@ class Container:
     evidencias: EvidenceService
     historico: HistoryService
     usuarios: UserService
+    anotacoes: HostAnnotationService
 
 
 def caminho_padrao_db() -> Path:
@@ -63,6 +67,7 @@ def criar_container(
     else:
         raise ValueError("Persistência de usuários deve ser 'memoria' ou 'sqlite'.")
     usuarios = UserService(repo_usuarios)
+    anotacoes = HostAnnotationService(SqliteHostAnnotationRepository(banco), repo_hosts)
     return Container(
         banco=banco,
         registro=registro,
@@ -73,4 +78,5 @@ def criar_container(
         evidencias=evidencias,
         historico=HistoryService(repo_evid),
         usuarios=usuarios,
+        anotacoes=anotacoes,
     )

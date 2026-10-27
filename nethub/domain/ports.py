@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterator
 
 from .enums import NivelRisco, TipoConfirmacao
+from .annotations import AnotacaoHost
 from .models import AlvoRede, Evidencia, FiltroHistorico, Host, ResultadoExecucao
 from .users import Usuario
 
@@ -34,6 +35,20 @@ class HostRepository(ABC):
 
     @abstractmethod
     def listar(self, tag: str | None = None) -> list[Host]: ...
+
+
+class HostAnnotationRepository(ABC):
+    @abstractmethod
+    def salvar(self, anotacao: AnotacaoHost) -> AnotacaoHost: ...
+
+    @abstractmethod
+    def buscar_por_id(self, id_: int) -> AnotacaoHost | None: ...
+
+    @abstractmethod
+    def listar(self, host_ip: str | None = None) -> list[AnotacaoHost]: ...
+
+    @abstractmethod
+    def excluir(self, id_: int) -> bool: ...
 
 
 class EvidenceRepository(ABC):
