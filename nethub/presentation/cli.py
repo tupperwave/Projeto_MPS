@@ -54,8 +54,9 @@ def _parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     d = sub.add_parser("descobrir", help="varre uma rede com Nmap e atualiza o inventário (UC-01)")
-    d.add_argument("alvo", help="IP ou CIDR, ex.: 192.168.0.0/24")
-    d.add_argument("--autorizado", action="store_true", help="confirmo que tenho autorização para varrer este alvo")
+    d.add_argument("alvo", nargs="?", help="IP ou CIDR, ex.: 192.168.0.0/24")
+    d.add_argument("--rede-local", action="store_true", help="detecta o CIDR da interface da rota IPv4 padrão")
+    d.add_argument("--autorizado", action="store_true", help="confirmo autorização para o alvo informado ou detectado")
 
     h = sub.add_parser("hosts", help="lista os hosts do inventário")
     h.add_argument("--tag")
@@ -117,7 +118,10 @@ def main(argv: list[str] | None = None, container: Container | None = None, entr
     if "--" in argv:  # tudo após '--' é o comando remoto, intocado pelo argparse
         i = argv.index("--")
         argv, restante = argv[:i], argv[i + 1:]
-    args = _parser().parse_args(argv)
+    parser = _parser()
+    args = parser.parse_args(argv)
+    if args.cmd == "descobrir" and bool(args.alvo) == args.rede_local:
+        parser.error("informe um CIDR ou use --rede-local (exatamente uma opção)")
     if args.cmd == "exec":
         args.comando = restante or args.comando
     c = container
@@ -159,13 +163,15 @@ def _despachar(args, c: Container, entrada) -> int:
         return COD_OK
 
     if args.cmd == "descobrir":
-        alvo = AlvoRede.criar(args.alvo)
+        alvo = c.rede_local.detectar() if args.rede_local else AlvoRede.criar(args.alvo)
+        if args.rede_local:
+            print(f"Rede local detectada: {alvo.cidr}")
         autorizado = args.autorizado
         if not autorizado:
             autorizado = entrada(f"Você tem autorização para varrer {alvo.cidr} ({alvo.total_enderecos} endereços)? [s/N] ").strip().lower() in ("s", "sim")
         r = c.descoberta.descobrir(alvo, autorizado)
         if not r.hosts:
-            print("Varredura concluída: nenhum host encontrado.")
+            print(f"Nenhum host respondeu em {alvo.cidr}. Confira se este é o segmento de rede correto.")
             return COD_OK
         _imprimir(fmt.tabela(fmt.CABECALHO_HOSTS, [fmt.resumo_host(h) for h in r.hosts]))
         print(f"\n{len(r.hosts)} host(s): {r.novos} novo(s), {r.atualizados} atualizado(s).")
