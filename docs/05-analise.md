@@ -10,6 +10,15 @@ classDiagram
     class Container {
         +criar_container() Container
     }
+    class CliAnotacoes {
+        <<boundary>>
+        +despachar(args) int
+        +criar(host_ip, conteudo)
+        +obter(id)
+        +listar(host_ip)
+        +atualizar(id, conteudo)
+        +excluir(id)
+    }
     class FacadeSingletonController {
         <<Singleton / Facade>>
         +gerentes: GerentesController
@@ -37,6 +46,14 @@ classDiagram
     class EntityCountSource {
         <<interface>>
         +contar() int
+    }
+    class LocalNetworkDetectorPort {
+        <<interface>>
+        +detectar() AlvoRede
+    }
+    class LinuxLocalNetworkDetector {
+        <<adapter>>
+        +detectar() AlvoRede
     }
     class InventoryService {
         <<control>>
@@ -71,16 +88,16 @@ classDiagram
     class SqliteHostRepository
     class SqliteHostAnnotationRepository
     class Host {
-        <<entity>>
+        <<model>>
         +ip: str
         +id: int
     }
     class Usuario {
-        <<entity>>
+        <<model>>
         +login: str
     }
     class AnotacaoHost {
-        <<entity>>
+        <<model>>
         +id: int
         +host_ip: str
         +conteudo: str
@@ -92,6 +109,9 @@ classDiagram
     Container --> FacadeSingletonScope : possui
     Container --> GerentesController : compõe
     Container --> EntityCountService : compõe
+    Container --> LocalNetworkDetectorPort : compõe
+    CliAnotacoes --> FacadeSingletonController : usa
+    LinuxLocalNetworkDetector ..|> LocalNetworkDetectorPort
     FacadeSingletonScope ..> FacadeSingletonController : singleton por composição
     FacadeSingletonController --> GerentesController
     FacadeSingletonController --> EntityCountService : delega contagem
@@ -114,6 +134,8 @@ classDiagram
 ```
 
 `quantidade_entidades_cadastradas()` delega ao serviço de contagem, que agrega consultas `COUNT(*)` ou contagens em memória. As fontes de contagem são uma capacidade segregada das portas CRUD. A fachada é singleton por composição, com cache fraca para não reter aplicações encerradas.
+
+No mesmo modelo BCE, `CliAnotacoes` é a fronteira, `HostAnnotationService` é o controle e `AnotacaoHost` é o modelo de domínio. A CLI encaminha o CRUD pela fachada única dos gerentes.
 
 ## Diagrama de classes
 
