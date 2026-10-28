@@ -29,8 +29,18 @@ Use esta página como checklist de acompanhamento. As datas e os critérios espe
 
 ### Integração da entrega
 
-- [ ] Abrir/atualizar o PR de `dev` para `main` e concluir o merge.
-- [ ] Criar e publicar a tag `entrega-1` sobre o commit integrado à `main`.
+- [X] Abrir/atualizar o PR de `dev` para `main` e concluir o merge.
+- [X] Criar e publicar a tag `entrega-1` sobre o commit integrado à `main`.
+
+## Sprint 3 — anotações de hosts e fachada de gerentes
+
+- [x] Analisar specs e criar a change OpenSpec `sprint-3-facade-entidade` com requisitos RF29–RF31.
+- [x] Implementar a entidade `AnotacaoHost`, CRUD no serviço e persistência SQLite vinculada ao host.
+- [x] Criar `FacadeSingletonController` para acesso aos gerentes da aplicação e contagem de hosts, usuários e anotações.
+- [x] Criar UC15 e atualizar o diagrama de classes de análise para contemplar a Sprint 3.
+- [ ] Revisar e validar a implementação e os artefatos da Sprint 3.
+- [x] Separar a sprint em três pacotes ZIP: specs e CRUD; fachada; UC15 e diagrama.
+- [ ] Criar os commits e fazer merge no Git pela equipe, usando os pacotes preparados.
 
 ## Pendências gerais do repositório
 
