@@ -16,6 +16,7 @@
 - [UC12](uc12.md)
 - [UC13](uc13.md)
 - [UC14](uc14.md)
+- [UC15](uc15.md) — Manter anotações de hosts e consultar gerentes
 
 ## Diagrama UML de casos de uso — gerenciamento de usuários
 
