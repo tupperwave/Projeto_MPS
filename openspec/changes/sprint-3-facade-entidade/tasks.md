@@ -14,6 +14,7 @@
 
 - [x] 3.1 Adicionar `FacadeSingletonController` ao container com os gerentes do sistema e escopo singleton da composição.
 - [x] 3.2 Implementar contagem de hosts, usuários e anotações para cenários vazio e combinado.
+- [x] 3.3 Cobrir CRUD, associação, singleton e contagem com testes automatizados.
 
 ## 4. Registro da sprint
 

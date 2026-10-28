@@ -13,6 +13,7 @@ from .application.discovery_service import DiscoveryService
 from .application.evidence_service import EvidenceService, HistoryService
 from .application.inventory_service import InventoryService
 from .application.annotation_service import HostAnnotationService
+from .application.facade_controller import FacadeSingletonController
 from .application.user_service import UserService
 from .domain.errors import FalhaBancoDados
 from .domain.ports import NetworkScannerPort, RemoteExecutorPort
@@ -37,6 +38,7 @@ class Container:
     historico: HistoryService
     usuarios: UserService
     anotacoes: HostAnnotationService
+    facade: FacadeSingletonController
 
 
 def caminho_padrao_db() -> Path:
@@ -68,15 +70,21 @@ def criar_container(
         raise ValueError("Persistência de usuários deve ser 'memoria' ou 'sqlite'.")
     usuarios = UserService(repo_usuarios)
     anotacoes = HostAnnotationService(SqliteHostAnnotationRepository(banco), repo_hosts)
+    descoberta = DiscoveryService(scanner or NmapAdapter(), inventario, evidencias)
+    menu = ContextMenuService(registro)
+    executor = ActionExecutor(remoto or SshExecutor(usuario=usuario, identidade=identidade), evidencias)
+    historico = HistoryService(repo_evid)
+    facade = FacadeSingletonController(inventario, descoberta, menu, executor, evidencias, historico, usuarios, anotacoes)
     return Container(
         banco=banco,
         registro=registro,
         inventario=inventario,
-        descoberta=DiscoveryService(scanner or NmapAdapter(), inventario, evidencias),
-        menu=ContextMenuService(registro),
-        executor=ActionExecutor(remoto or SshExecutor(usuario=usuario, identidade=identidade), evidencias),
+        descoberta=descoberta,
+        menu=menu,
+        executor=executor,
         evidencias=evidencias,
-        historico=HistoryService(repo_evid),
+        historico=historico,
         usuarios=usuarios,
         anotacoes=anotacoes,
+        facade=facade,
     )
