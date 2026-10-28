@@ -43,3 +43,5 @@
 | `0222387` | Merge da detecção de rede | Integra a descoberta automática à `main`. |
 | `3303460` | Expõe CRUD de anotações na CLI | Adiciona os subcomandos de anotações, atualiza UC15 e documenta os estereótipos BCE no diagrama. |
 | `65ef5a9` | Merge do CRUD e diagrama | Integra a versão atualizada da Sprint 3 à `main`. |
+| `1c4b7f3` | Documenta testes e commits | Acrescenta os comandos de teste ao README e registra estas notas explicativas por commit. |
+| `d976cf8` | Merge do release atualizado | Integra as instruções de teste e as notas de release à `main`. |
