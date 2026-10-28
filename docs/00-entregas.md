@@ -36,6 +36,7 @@ Use esta página como checklist de acompanhamento. As datas e os critérios espe
 
 - [x] Analisar specs e criar a change OpenSpec `sprint-3-facade-entidade` com requisitos RF29–RF31.
 - [x] Implementar a entidade `AnotacaoHost`, CRUD no serviço e persistência SQLite vinculada ao host.
+- [x] Expor criar, consultar, listar, atualizar e excluir anotações pela CLI, delegando à fachada única.
 - [x] Criar `FacadeSingletonController` para acesso aos gerentes da aplicação e contagem de hosts, usuários e anotações.
 - [x] Criar UC15 e atualizar o diagrama de classes de análise para contemplar a Sprint 3.
 - [x] Revisar arquitetura e artefatos da Sprint 3 conforme SOLID, preservando as portas das Sprints 1 e 2 (65 testes aprovados; specs validadas).

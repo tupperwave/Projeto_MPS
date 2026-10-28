@@ -7,10 +7,12 @@ import shlex
 import sys
 from datetime import datetime, time as hora
 
+from ..application.facade_controller import FacadeSingletonController
 from ..bootstrap import Container, criar_container
 from ..domain.actions import ExecutarComandoAcao
+from ..domain.annotations import AnotacaoHost
 from ..domain.enums import StatusExecucao, TipoAcao, TipoConfirmacao
-from ..domain.errors import NetHubError
+from ..domain.errors import NetHubError, RegistroNaoEncontrado
 from ..domain.models import AlvoRede, FiltroHistorico
 from ..domain.ports import ConfirmationPort, PedidoConfirmacao
 from . import formatacao as fmt
@@ -42,6 +44,63 @@ class CliConfirmacao(ConfirmationPort):
 
 def _imprimir(linhas: list[str]) -> None:
     print("\n".join(linhas))
+
+
+class CliAnotacoes:
+    """Fronteira CLI para o CRUD de anotações, usando a fachada dos gerentes."""
+
+    def __init__(self, facade: FacadeSingletonController) -> None:
+        self._anotacoes = facade.gerentes.anotacoes
+
+    def despachar(self, args: argparse.Namespace) -> int:
+        if args.anotacoes_cmd == "criar":
+            return self.criar(args.host_ip, args.conteudo)
+
+        if args.anotacoes_cmd == "listar":
+            return self.listar(args.host)
+
+        if args.anotacoes_cmd == "obter":
+            return self.obter(args.id)
+
+        if args.anotacoes_cmd == "atualizar":
+            return self.atualizar(args.id, args.conteudo)
+
+        if args.anotacoes_cmd == "excluir":
+            return self.excluir(args.id)
+
+        return COD_ERRO
+
+    def criar(self, host_ip: str, conteudo: str) -> int:
+        anotacao = self._anotacoes.criar(host_ip, conteudo)
+        print(f"Anotação #{anotacao.id} criada para {anotacao.host_ip}.")
+        return COD_OK
+
+    def obter(self, id_: int) -> int:
+        print(self._linha(self._anotacoes.obter(id_)))
+        return COD_OK
+
+    def listar(self, host_ip: str | None = None) -> int:
+        anotacoes = self._anotacoes.listar(host_ip)
+        if not anotacoes:
+            print("Nenhuma anotação encontrada.")
+            return COD_OK
+        _imprimir([self._linha(anotacao) for anotacao in anotacoes])
+        return COD_OK
+
+    def atualizar(self, id_: int, conteudo: str) -> int:
+        anotacao = self._anotacoes.atualizar(id_, conteudo)
+        print(f"Anotação #{anotacao.id} atualizada.")
+        return COD_OK
+
+    def excluir(self, id_: int) -> int:
+        if not self._anotacoes.excluir(id_):
+            raise RegistroNaoEncontrado(f"Anotação #{id_} não encontrada.")
+        print(f"Anotação #{id_} excluída.")
+        return COD_OK
+
+    @staticmethod
+    def _linha(anotacao: AnotacaoHost) -> str:
+        return f"#{anotacao.id} | {anotacao.host_ip} | {anotacao.conteudo}"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -90,6 +149,21 @@ def _parser() -> argparse.ArgumentParser:
     cadastrar = usuarios_sub.add_parser("cadastrar", help="cadastra um usuário")
     cadastrar.add_argument("login")
     usuarios_sub.add_parser("listar", help="lista usuários cadastrados")
+
+    anotacoes = sub.add_parser("anotacoes", help="gerencia anotações vinculadas a hosts")
+    anotacoes_sub = anotacoes.add_subparsers(dest="anotacoes_cmd", required=True)
+    criar_anotacao = anotacoes_sub.add_parser("criar", help="cria uma anotação para um host existente")
+    criar_anotacao.add_argument("host_ip")
+    criar_anotacao.add_argument("conteudo")
+    obter_anotacao = anotacoes_sub.add_parser("obter", help="consulta uma anotação pelo identificador")
+    obter_anotacao.add_argument("id", type=int)
+    listar_anotacoes = anotacoes_sub.add_parser("listar", help="lista anotações, com filtro opcional por host")
+    listar_anotacoes.add_argument("--host", help="filtra pelo IP do host")
+    atualizar_anotacao = anotacoes_sub.add_parser("atualizar", help="atualiza o conteúdo de uma anotação")
+    atualizar_anotacao.add_argument("id", type=int)
+    atualizar_anotacao.add_argument("conteudo")
+    excluir_anotacao = anotacoes_sub.add_parser("excluir", help="exclui uma anotação pelo identificador")
+    excluir_anotacao.add_argument("id", type=int)
 
     t = sub.add_parser("tag", help="organiza hosts com tags (UC-09)")
     t.add_argument("operacao", choices=["add", "rm"])
@@ -161,6 +235,9 @@ def _despachar(args, c: Container, entrada) -> int:
         for usuario in usuarios:
             print(f"- {usuario.login}")
         return COD_OK
+
+    if args.cmd == "anotacoes":
+        return CliAnotacoes(c.facade).despachar(args)
 
     if args.cmd == "descobrir":
         alvo = c.rede_local.detectar() if args.rede_local else AlvoRede.criar(args.alvo)
