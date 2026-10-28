@@ -20,6 +20,7 @@ Repositório da equipe para a disciplina Métodos e Projeto de Software. A docum
 - [Arquitetura e ADRs](docs/07-arquitetura/)
 - [Projeto](docs/08-projeto.md)
 - [Requisitos vigentes](openspec/specs/)
+- [Histórico e notas da Sprint 3](docs/releases/sprint-3.md)
 
 Os arquivos-fonte originais e o PDF anterior foram preservados em `docs/03-elicitacao/anexos/`. Onde as fontes divergem ou não definem critérios suficientes, a documentação sinaliza a pendência em vez de inventar uma decisão.
 
@@ -75,3 +76,17 @@ python3 -m nethub descobrir --rede-local --autorizado
 ```
 
 Se preferir, informe o alvo manualmente como antes: `python3 -m nethub descobrir 192.168.1.0/24`. A rede detectada pode ser uma VPN ou túnel; confira o CIDR exibido antes de autorizar. Se nenhum host responder, o comando orienta a verificar se o segmento está correto.
+
+## Executar os testes
+
+Na raiz do repositório, execute a suíte completa com a biblioteca padrão do Python:
+
+```bash
+python3 -m unittest discover -v
+```
+
+Para validar os requisitos OpenSpec:
+
+```bash
+openspec validate --all
+```
