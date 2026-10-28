@@ -45,3 +45,5 @@
 | `65ef5a9` | Merge do CRUD e diagrama | Integra a versão atualizada da Sprint 3 à `main`. |
 | `1c4b7f3` | Documenta testes e commits | Acrescenta os comandos de teste ao README e registra estas notas explicativas por commit. |
 | `d976cf8` | Merge do release atualizado | Integra as instruções de teste e as notas de release à `main`. |
+| `7a4a288` | Completa comentários do histórico | Acrescenta notas sobre o commit de testes e o merge das notas de release. |
+| `15db71b` | Merge das notas finais | Integra à `main` os comentários restantes do histórico da Sprint 3. |
