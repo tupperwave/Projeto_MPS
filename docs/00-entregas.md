@@ -29,8 +29,8 @@ Use esta página como checklist de acompanhamento. As datas e os critérios espe
 
 ### Integração da entrega
 
-- [ ] Abrir/atualizar o PR de `dev` para `main` e concluir o merge.
-- [ ] Criar e publicar a tag `entrega-1` sobre o commit integrado à `main`.
+- [x] Integrar `dev` à `main` pelo PR #14.
+- [x] Criar e publicar a tag `entrega-1` sobre o commit integrado à `main`.
 
 ## Sprint 3 — anotações de hosts e fachada de gerentes
 
@@ -40,7 +40,7 @@ Use esta página como checklist de acompanhamento. As datas e os critérios espe
 - [x] Criar UC15 e atualizar o diagrama de classes de análise para contemplar a Sprint 3.
 - [x] Revisar arquitetura e artefatos da Sprint 3 conforme SOLID, preservando as portas das Sprints 1 e 2 (65 testes aprovados; specs validadas).
 - [x] Separar a sprint em três pacotes ZIP: specs e CRUD; fachada; UC15 e diagrama.
-- [ ] Enviar os commits 2 e 3 para `origin/dev` após autorização explícita e concluir a integração no Git.
+- [x] Enviar os commits 2 e 3 para `origin/dev` e integrar a Sprint 3 à `main`.
 
 ## Pendências gerais do repositório
 
