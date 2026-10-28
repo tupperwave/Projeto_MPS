@@ -1,5 +1,120 @@
 # 5. Análise
 
+## Modelo de classes atualizado — Sprint 3
+
+O modelo abaixo inclui a entidade nova, seu vínculo com `Host`, persistência e a fachada única para os gerentes da aplicação.
+
+```mermaid
+classDiagram
+    direction LR
+    class Container {
+        +criar_container() Container
+    }
+    class FacadeSingletonController {
+        <<Singleton / Facade>>
+        +gerentes: GerentesController
+        -contador: EntityCountService
+        +quantidade_entidades_cadastradas() int
+    }
+    class FacadeSingletonScope {
+        <<composition scope>>
+    }
+    class GerentesController {
+        <<manager bundle>>
+        +inventario: InventoryService
+        +descoberta: DiscoveryService
+        +menu: ContextMenuService
+        +executor: ActionExecutor
+        +evidencias: EvidenceService
+        +historico: HistoryService
+        +usuarios: UserService
+        +anotacoes: HostAnnotationService
+    }
+    class EntityCountService {
+        <<application service>>
+        +quantidade_entidades_cadastradas() int
+    }
+    class EntityCountSource {
+        <<interface>>
+        +contar() int
+    }
+    class InventoryService {
+        <<control>>
+        +listar() List~Host~
+        +obter(ip) Host
+    }
+    class UserService {
+        <<control>>
+        +cadastrar(login, senha) Usuario
+        +listar() List~Usuario~
+    }
+    class HostAnnotationService {
+        <<control>>
+        +criar(host_ip, conteudo) AnotacaoHost
+        +obter(id) AnotacaoHost
+        +listar(host_ip) List~AnotacaoHost~
+        +atualizar(id, conteudo) AnotacaoHost
+        +excluir(id) bool
+    }
+    class HostRepository {
+        <<interface>>
+        +buscar_por_ip(ip) Host
+        +listar() List~Host~
+    }
+    class HostAnnotationRepository {
+        <<interface>>
+        +salvar(anotacao) AnotacaoHost
+        +buscar_por_id(id) AnotacaoHost
+        +listar(host_ip) List~AnotacaoHost~
+        +excluir(id) bool
+    }
+    class SqliteHostRepository
+    class SqliteHostAnnotationRepository
+    class Host {
+        <<entity>>
+        +ip: str
+        +id: int
+    }
+    class Usuario {
+        <<entity>>
+        +login: str
+    }
+    class AnotacaoHost {
+        <<entity>>
+        +id: int
+        +host_ip: str
+        +conteudo: str
+        +criada_em: datetime
+        +atualizada_em: datetime
+        +atualizar(conteudo) void
+    }
+
+    Container --> FacadeSingletonScope : possui
+    Container --> GerentesController : compõe
+    Container --> EntityCountService : compõe
+    FacadeSingletonScope ..> FacadeSingletonController : singleton por composição
+    FacadeSingletonController --> GerentesController
+    FacadeSingletonController --> EntityCountService : delega contagem
+    GerentesController --> InventoryService
+    GerentesController --> UserService
+    GerentesController --> HostAnnotationService
+    InventoryService --> HostRepository
+    UserService --> Usuario
+    HostAnnotationService --> HostAnnotationRepository
+    HostAnnotationService --> HostRepository : valida host
+    SqliteHostRepository ..|> HostRepository
+    SqliteHostAnnotationRepository ..|> HostAnnotationRepository
+    SqliteHostRepository ..|> EntityCountSource
+    SqliteUserRepository ..|> EntityCountSource
+    MemoryUserRepository ..|> EntityCountSource
+    SqliteHostAnnotationRepository ..|> EntityCountSource
+    EntityCountService --> EntityCountSource : agrega provedores
+    Host "1" --> "0..*" AnotacaoHost : possui
+    HostAnnotationRepository --> AnotacaoHost
+```
+
+`quantidade_entidades_cadastradas()` delega ao serviço de contagem, que agrega consultas `COUNT(*)` ou contagens em memória. As fontes de contagem são uma capacidade segregada das portas CRUD. A fachada é singleton por composição, com cache fraca para não reter aplicações encerradas.
+
 ## Diagrama de classes
 
 O diagrama de classes fornecido pela equipe está preservado como Mermaid em [`anexos/fontes/diagrama-de-classes-original.mmd`](03-elicitacao/anexos/fontes/diagrama-de-classes-original.mmd). Ele propõe camadas de apresentação, aplicação, domínio, portas e infraestrutura.

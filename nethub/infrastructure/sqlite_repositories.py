@@ -10,10 +10,11 @@ from ..domain.enums import (
     NivelRisco, StatusCapacidade, StatusExecucao, TipoAcao, TipoCapacidade,
 )
 from ..domain.errors import FalhaPersistenciaUsuarios, UsuarioDuplicado
+from ..domain.annotations import AnotacaoHost
 from ..domain.models import (
     Capacidade, Evidencia, FiltroHistorico, Host, PortaServico, de_iso, para_iso,
 )
-from ..domain.ports import EvidenceRepository, HostRepository, UserRepository
+from ..domain.ports import EvidenceRepository, HostRepository, HostAnnotationRepository, UserRepository
 from ..domain.users import Usuario
 from .sqlite_db import SqliteDatabase
 
@@ -71,6 +72,9 @@ class SqliteHostRepository(HostRepository):
             ip = ipaddress.ip_address(h.ip)
             return (ip.version, int(ip))
         return sorted(hosts, key=chave)
+
+    def contar(self) -> int:
+        return self._db.consultar("SELECT COUNT(*) AS total FROM hosts")[0]["total"]
 
     @staticmethod
     def _para_host(r: sqlite3.Row) -> Host:
@@ -192,9 +196,61 @@ class SqliteUserRepository(UserRepository):
             raise FalhaPersistenciaUsuarios("Não foi possível listar usuários no SQLite.") from exc
         return [self._para_usuario(linha) for linha in linhas]
 
+    def contar(self) -> int:
+        try:
+            linhas = self._db.consultar("SELECT COUNT(*) AS total FROM usuarios")
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaUsuarios("Não foi possível contar usuários no SQLite.") from exc
+        return linhas[0]["total"]
+
     @staticmethod
     def _para_usuario(linha: sqlite3.Row) -> Usuario:
         try:
             return Usuario.restaurar(linha["login"], linha["sal_senha"], linha["hash_senha"])
         except (KeyError, TypeError, ValueError) as exc:
             raise FalhaPersistenciaUsuarios("Os dados de usuário no SQLite estão inválidos.") from exc
+
+
+class SqliteHostAnnotationRepository(HostAnnotationRepository):
+    """Persistência SQLite das anotações vinculadas a hosts."""
+
+    def __init__(self, banco: SqliteDatabase) -> None:
+        self._db = banco
+
+    def salvar(self, anotacao: AnotacaoHost) -> AnotacaoHost:
+        if anotacao.id is None:
+            cur = self._db.executar(
+                "INSERT INTO anotacoes_hosts (host_ip, conteudo, criada_em, atualizada_em) VALUES (?, ?, ?, ?)",
+                (anotacao.host_ip, anotacao.conteudo, para_iso(anotacao.criada_em), para_iso(anotacao.atualizada_em)),
+            )
+            anotacao.id = cur.lastrowid
+        else:
+            self._db.executar(
+                "UPDATE anotacoes_hosts SET host_ip = ?, conteudo = ?, atualizada_em = ? WHERE id = ?",
+                (anotacao.host_ip, anotacao.conteudo, para_iso(anotacao.atualizada_em), anotacao.id),
+            )
+        return anotacao
+
+    def buscar_por_id(self, id_: int) -> AnotacaoHost | None:
+        linhas = self._db.consultar("SELECT * FROM anotacoes_hosts WHERE id = ?", (id_,))
+        return self._para_anotacao(linhas[0]) if linhas else None
+
+    def listar(self, host_ip: str | None = None) -> list[AnotacaoHost]:
+        if host_ip is None:
+            linhas = self._db.consultar("SELECT * FROM anotacoes_hosts ORDER BY id")
+        else:
+            linhas = self._db.consultar("SELECT * FROM anotacoes_hosts WHERE host_ip = ? ORDER BY id", (host_ip,))
+        return [self._para_anotacao(linha) for linha in linhas]
+
+    def contar(self) -> int:
+        return self._db.consultar("SELECT COUNT(*) AS total FROM anotacoes_hosts")[0]["total"]
+
+    def excluir(self, id_: int) -> bool:
+        return self._db.executar("DELETE FROM anotacoes_hosts WHERE id = ?", (id_,)).rowcount > 0
+
+    @staticmethod
+    def _para_anotacao(linha: sqlite3.Row) -> AnotacaoHost:
+        return AnotacaoHost(
+            id=linha["id"], host_ip=linha["host_ip"], conteudo=linha["conteudo"],
+            criada_em=de_iso(linha["criada_em"]), atualizada_em=de_iso(linha["atualizada_em"]),
+        )

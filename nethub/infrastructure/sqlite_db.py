@@ -45,6 +45,17 @@ _MIGRACOES = [
         hash_senha BLOB NOT NULL
     );
     """,
+    # versão 3: anotações vinculadas a hosts
+    """
+    CREATE TABLE anotacoes_hosts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        host_ip TEXT NOT NULL REFERENCES hosts(ip) ON DELETE CASCADE,
+        conteudo TEXT NOT NULL,
+        criada_em TEXT NOT NULL,
+        atualizada_em TEXT NOT NULL
+    );
+    CREATE INDEX idx_anotacoes_hosts_host_ip ON anotacoes_hosts(host_ip);
+    """,
 ]
 
 
@@ -56,6 +67,7 @@ class SqliteDatabase:
             caminho.parent.mkdir(parents=True, exist_ok=True)
         self._con = sqlite3.connect(str(caminho))
         try:
+            self._con.execute("PRAGMA foreign_keys = ON")
             self._con.row_factory = sqlite3.Row
             if not self._memoria:
                 try:
