@@ -20,6 +20,12 @@ class NetworkScannerPort(ABC):
         """Retorna hosts ativos. Deve levantar ScannerFalhou se a varredura não completou."""
 
 
+class LocalNetworkDetectorPort(ABC):
+    @abstractmethod
+    def detectar(self) -> AlvoRede:
+        """Retorna o CIDR IPv4 da interface associada à rota padrão."""
+
+
 class RemoteExecutorPort(ABC):
     @abstractmethod
     def executar(self, host: Host, comando: str, timeout_s: float) -> ResultadoExecucao: ...

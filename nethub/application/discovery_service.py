@@ -36,7 +36,10 @@ class DiscoveryService:
         inicio = agora()
         try:
             if not self._scanner.disponivel():
-                raise ScannerIndisponivel("Nmap não encontrado no PATH. Instale-o para usar a descoberta.")
+                raise ScannerIndisponivel(
+                    "Nmap não encontrado no PATH. No Fedora, instale com 'sudo dnf install nmap' "
+                    "e tente novamente."
+                )
             encontrados = self._scanner.varrer(alvo)
         except NetHubError as exc:
             self._evidencias.registrar(

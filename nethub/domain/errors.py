@@ -21,6 +21,10 @@ class ScannerFalhou(NetHubError):
     pass
 
 
+class RedeLocalIndisponivel(NetHubError):
+    """Não foi possível detectar automaticamente a rede local."""
+
+
 class HostNaoEncontrado(NetHubError):
     pass
 

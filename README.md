@@ -68,3 +68,21 @@ finally:
 ```
 
 Substitua o IP por um host presente no inventário. A contagem da fachada soma hosts, usuários e anotações cadastrados.
+
+## Descobrir hosts
+
+A descoberta usa o executável Nmap. No Fedora, instale-o uma vez com `sudo dnf install nmap`; a detecção automática da rede também requer o utilitário `ip` (pacote `iproute`, normalmente já instalado no Fedora). O NetHub verifica se o Nmap está disponível e informa o comando de instalação caso esteja ausente; ele não instala programas do sistema automaticamente.
+
+Para detectar a rede associada à rota IPv4 padrão, mostrar o CIDR e confirmar antes de varrer:
+
+```bash
+python3 -m nethub descobrir --rede-local
+```
+
+Também é possível antecipar a confirmação, mantendo a descoberta restrita à rede detectada:
+
+```bash
+python3 -m nethub descobrir --rede-local --autorizado
+```
+
+Se preferir, informe o alvo manualmente como antes: `python3 -m nethub descobrir 192.168.1.0/24`. A rede detectada pode ser uma VPN ou túnel; confira o CIDR exibido antes de autorizar. Se nenhum host responder, o comando orienta a verificar se o segmento está correto.

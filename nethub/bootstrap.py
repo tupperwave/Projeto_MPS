@@ -20,7 +20,8 @@ from .application.facade_controller import (
 )
 from .application.user_service import UserService
 from .domain.errors import FalhaBancoDados
-from .domain.ports import NetworkScannerPort, RemoteExecutorPort
+from .domain.ports import LocalNetworkDetectorPort, NetworkScannerPort, RemoteExecutorPort
+from .infrastructure.local_network_detector import LinuxLocalNetworkDetector
 from .infrastructure.nmap_adapter import NmapAdapter
 from .infrastructure.memory_user_repository import MemoryUserRepository
 from .infrastructure.sqlite_db import SqliteDatabase
@@ -46,6 +47,7 @@ class Container:
     contador_entidades: EntityCountService
     facade_scope: FacadeSingletonScope
     facade: FacadeSingletonController
+    rede_local: LocalNetworkDetectorPort
     _finalizador: finalize = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -94,6 +96,7 @@ def criar_container(
     contador_entidades = EntityCountService((repo_hosts, repo_usuarios, repo_anotacoes))
     facade_scope = FacadeSingletonScope()
     facade = FacadeSingletonController(facade_scope, gerentes, contador_entidades)
+    rede_local = LinuxLocalNetworkDetector()
     return Container(
         banco=banco,
         registro=registro,
@@ -109,4 +112,5 @@ def criar_container(
         contador_entidades=contador_entidades,
         facade_scope=facade_scope,
         facade=facade,
+        rede_local=rede_local,
     )
