@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import os
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from weakref import finalize
 
 from .application.action_executor import ActionExecutor
 from .application.action_registry import ActionRegistry, ContextMenuService, registro_padrao
@@ -13,7 +14,10 @@ from .application.discovery_service import DiscoveryService
 from .application.evidence_service import EvidenceService, HistoryService
 from .application.inventory_service import InventoryService
 from .application.annotation_service import HostAnnotationService
-from .application.facade_controller import FacadeSingletonController
+from .application.entity_count_service import EntityCountService
+from .application.facade_controller import (
+    FacadeSingletonController, FacadeSingletonScope, GerentesController,
+)
 from .application.user_service import UserService
 from .domain.errors import FalhaBancoDados
 from .domain.ports import NetworkScannerPort, RemoteExecutorPort
@@ -38,7 +42,18 @@ class Container:
     historico: HistoryService
     usuarios: UserService
     anotacoes: HostAnnotationService
+    gerentes: GerentesController
+    contador_entidades: EntityCountService
+    facade_scope: FacadeSingletonScope
     facade: FacadeSingletonController
+    _finalizador: finalize = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        self._finalizador = finalize(self, self.banco.fechar)
+
+    def fechar(self) -> None:
+        """Fecha os recursos que pertencem a esta composição."""
+        self._finalizador()
 
 
 def caminho_padrao_db() -> Path:
@@ -69,12 +84,16 @@ def criar_container(
     else:
         raise ValueError("Persistência de usuários deve ser 'memoria' ou 'sqlite'.")
     usuarios = UserService(repo_usuarios)
-    anotacoes = HostAnnotationService(SqliteHostAnnotationRepository(banco), repo_hosts)
+    repo_anotacoes = SqliteHostAnnotationRepository(banco)
+    anotacoes = HostAnnotationService(repo_anotacoes, repo_hosts)
     descoberta = DiscoveryService(scanner or NmapAdapter(), inventario, evidencias)
     menu = ContextMenuService(registro)
     executor = ActionExecutor(remoto or SshExecutor(usuario=usuario, identidade=identidade), evidencias)
     historico = HistoryService(repo_evid)
-    facade = FacadeSingletonController(inventario, descoberta, menu, executor, evidencias, historico, usuarios, anotacoes)
+    gerentes = GerentesController(inventario, descoberta, menu, executor, evidencias, historico, usuarios, anotacoes)
+    contador_entidades = EntityCountService((repo_hosts, repo_usuarios, repo_anotacoes))
+    facade_scope = FacadeSingletonScope()
+    facade = FacadeSingletonController(facade_scope, gerentes, contador_entidades)
     return Container(
         banco=banco,
         registro=registro,
@@ -86,5 +105,8 @@ def criar_container(
         historico=historico,
         usuarios=usuarios,
         anotacoes=anotacoes,
+        gerentes=gerentes,
+        contador_entidades=contador_entidades,
+        facade_scope=facade_scope,
         facade=facade,
     )

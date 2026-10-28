@@ -21,3 +21,6 @@ class MemoryUserRepository(UserRepository):
 
     def listar(self) -> list[Usuario]:
         return list(self._usuarios.values())
+
+    def contar(self) -> int:
+        return len(self._usuarios)

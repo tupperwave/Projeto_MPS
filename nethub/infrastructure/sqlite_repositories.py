@@ -73,6 +73,9 @@ class SqliteHostRepository(HostRepository):
             return (ip.version, int(ip))
         return sorted(hosts, key=chave)
 
+    def contar(self) -> int:
+        return self._db.consultar("SELECT COUNT(*) AS total FROM hosts")[0]["total"]
+
     @staticmethod
     def _para_host(r: sqlite3.Row) -> Host:
         return Host(
@@ -193,6 +196,13 @@ class SqliteUserRepository(UserRepository):
             raise FalhaPersistenciaUsuarios("Não foi possível listar usuários no SQLite.") from exc
         return [self._para_usuario(linha) for linha in linhas]
 
+    def contar(self) -> int:
+        try:
+            linhas = self._db.consultar("SELECT COUNT(*) AS total FROM usuarios")
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaUsuarios("Não foi possível contar usuários no SQLite.") from exc
+        return linhas[0]["total"]
+
     @staticmethod
     def _para_usuario(linha: sqlite3.Row) -> Usuario:
         try:
@@ -231,6 +241,9 @@ class SqliteHostAnnotationRepository(HostAnnotationRepository):
         else:
             linhas = self._db.consultar("SELECT * FROM anotacoes_hosts WHERE host_ip = ? ORDER BY id", (host_ip,))
         return [self._para_anotacao(linha) for linha in linhas]
+
+    def contar(self) -> int:
+        return self._db.consultar("SELECT COUNT(*) AS total FROM anotacoes_hosts")[0]["total"]
 
     def excluir(self, id_: int) -> bool:
         return self._db.executar("DELETE FROM anotacoes_hosts WHERE id = ?", (id_,)).rowcount > 0

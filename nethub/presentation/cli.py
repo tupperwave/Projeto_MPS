@@ -120,13 +120,16 @@ def main(argv: list[str] | None = None, container: Container | None = None, entr
     args = _parser().parse_args(argv)
     if args.cmd == "exec":
         args.comando = restante or args.comando
+    c = container
+    criado_aqui = c is None
     try:
-        c = container or criar_container(
-            args.db,
-            getattr(args, "usuario", None),
-            getattr(args, "identidade", None),
-            persistencia_usuarios=args.persistencia_usuarios,
-        )
+        if c is None:
+            c = criar_container(
+                args.db,
+                getattr(args, "usuario", None),
+                getattr(args, "identidade", None),
+                persistencia_usuarios=args.persistencia_usuarios,
+            )
         return _despachar(args, c, entrada)
     except NetHubError as exc:
         print(f"Erro: {exc}", file=sys.stderr)
@@ -134,6 +137,9 @@ def main(argv: list[str] | None = None, container: Container | None = None, entr
     except ValueError as exc:  # ex.: usuário SSH inválido
         print(f"Erro: {exc}", file=sys.stderr)
         return COD_ERRO
+    finally:
+        if criado_aqui and c is not None:
+            c.fechar()
 
 
 def _despachar(args, c: Container, entrada) -> int:

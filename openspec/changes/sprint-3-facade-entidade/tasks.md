@@ -20,3 +20,10 @@
 
 - [x] 4.1 Atualizar `docs/00-entregas.md` com entregas e pendência de revisão da Sprint 3.
 - [x] 4.2 Separar a entrega em três pacotes ZIP ordenados para criação dos commits pelo time.
+
+## 5. Revisão SOLID após a revisão dos specs anteriores
+
+- [x] 5.1 Extrair contagem para serviço de aplicação extensível e manter a porta de contagem segregada das portas CRUD.
+- [x] 5.2 Agrupar gerentes na fachada e limitar o Singleton ao escopo de cada composição sem manter instâncias encerradas.
+- [x] 5.3 Definir o ciclo de vida das conexões pela composição e fechar containers próprios da CLI.
+- [x] 5.4 Atualizar diagrama e testes para refletir as novas dependências e validar os cinco princípios SOLID.

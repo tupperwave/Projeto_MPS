@@ -12,6 +12,15 @@ classDiagram
     }
     class FacadeSingletonController {
         <<Singleton / Facade>>
+        +gerentes: GerentesController
+        -contador: EntityCountService
+        +quantidade_entidades_cadastradas() int
+    }
+    class FacadeSingletonScope {
+        <<composition scope>>
+    }
+    class GerentesController {
+        <<manager bundle>>
         +inventario: InventoryService
         +descoberta: DiscoveryService
         +menu: ContextMenuService
@@ -20,7 +29,14 @@ classDiagram
         +historico: HistoryService
         +usuarios: UserService
         +anotacoes: HostAnnotationService
+    }
+    class EntityCountService {
+        <<application service>>
         +quantidade_entidades_cadastradas() int
+    }
+    class EntityCountSource {
+        <<interface>>
+        +contar() int
     }
     class InventoryService {
         <<control>>
@@ -73,21 +89,31 @@ classDiagram
         +atualizar(conteudo) void
     }
 
-    Container --> FacadeSingletonController : compõe
-    FacadeSingletonController --> InventoryService
-    FacadeSingletonController --> UserService
-    FacadeSingletonController --> HostAnnotationService
+    Container --> FacadeSingletonScope : possui
+    Container --> GerentesController : compõe
+    Container --> EntityCountService : compõe
+    FacadeSingletonScope ..> FacadeSingletonController : singleton por composição
+    FacadeSingletonController --> GerentesController
+    FacadeSingletonController --> EntityCountService : delega contagem
+    GerentesController --> InventoryService
+    GerentesController --> UserService
+    GerentesController --> HostAnnotationService
     InventoryService --> HostRepository
     UserService --> Usuario
     HostAnnotationService --> HostAnnotationRepository
     HostAnnotationService --> HostRepository : valida host
     SqliteHostRepository ..|> HostRepository
     SqliteHostAnnotationRepository ..|> HostAnnotationRepository
+    SqliteHostRepository ..|> EntityCountSource
+    SqliteUserRepository ..|> EntityCountSource
+    MemoryUserRepository ..|> EntityCountSource
+    SqliteHostAnnotationRepository ..|> EntityCountSource
+    EntityCountService --> EntityCountSource : agrega provedores
     Host "1" --> "0..*" AnotacaoHost : possui
     HostAnnotationRepository --> AnotacaoHost
 ```
 
-`quantidade_entidades_cadastradas()` soma hosts, usuários e anotações. A fachada tem uma instância por composição da aplicação, permitindo que testes e aplicações isoladas usem seus próprios repositórios.
+`quantidade_entidades_cadastradas()` delega ao serviço de contagem, que agrega consultas `COUNT(*)` ou contagens em memória. As fontes de contagem são uma capacidade segregada das portas CRUD. A fachada é singleton por composição, com cache fraca para não reter aplicações encerradas.
 
 ## Diagrama de classes
 

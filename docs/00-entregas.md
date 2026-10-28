@@ -38,7 +38,7 @@ Use esta página como checklist de acompanhamento. As datas e os critérios espe
 - [x] Implementar a entidade `AnotacaoHost`, CRUD no serviço e persistência SQLite vinculada ao host.
 - [x] Criar `FacadeSingletonController` para acesso aos gerentes da aplicação e contagem de hosts, usuários e anotações.
 - [x] Criar UC15 e atualizar o diagrama de classes de análise para contemplar a Sprint 3.
-- [x] Revisar e validar a implementação e os artefatos da Sprint 3 (61 testes aprovados; specs validadas).
+- [x] Revisar arquitetura e artefatos da Sprint 3 conforme SOLID, preservando as portas das Sprints 1 e 2 (65 testes aprovados; specs validadas).
 - [x] Separar a sprint em três pacotes ZIP: specs e CRUD; fachada; UC15 e diagrama.
 - [ ] Enviar os commits 2 e 3 para `origin/dev` após autorização explícita e concluir a integração no Git.
 
