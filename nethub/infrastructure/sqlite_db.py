@@ -56,7 +56,30 @@ _MIGRACOES = [
     );
     CREATE INDEX idx_anotacoes_hosts_host_ip ON anotacoes_hosts(host_ip);
     """,
+
+    # versão 4: acessos remotos
+    """
+    CREATE TABLE acessos_remotos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        host_ip TEXT NOT NULL REFERENCES hosts(ip) ON DELETE CASCADE,
+        usuario TEXT NOT NULL,
+        porta INTEGER NOT NULL DEFAULT 22,
+        metodo TEXT NOT NULL,
+        identidade TEXT,
+        referencia_segredo TEXT,
+        criado_em TEXT NOT NULL,
+        atualizado_em TEXT NOT NULL,
+        UNIQUE(host_ip, usuario)
+    );
+    """,
+
+
+
+
 ]
+
+
+
 
 
 class SqliteDatabase:

@@ -92,3 +92,31 @@ class ConfirmationPort(ABC):
 
     @abstractmethod
     def confirmar(self, pedido: PedidoConfirmacao) -> bool: ...
+
+
+class RemoteAccessRepository(ABC):
+    @abstractmethod
+    def salvar(self, acesso: AcessoRemoto) -> AcessoRemoto:
+        ...
+
+    @abstractmethod
+    def buscar_por_host(self, host_ip: str) -> AcessoRemoto | None:
+        ...
+
+    @abstractmethod
+    def excluir_por_host(self, host_ip: str) -> bool:
+
+        ...
+        
+class SecretStorePort(ABC):
+    @abstractmethod
+    def salvar(self, referencia: str, segredo: str) -> None:
+        ...
+
+    @abstractmethod
+    def obter(self, referencia: str) -> str | None:
+        ...
+
+    @abstractmethod
+    def excluir(self, referencia: str) -> bool:
+        ...

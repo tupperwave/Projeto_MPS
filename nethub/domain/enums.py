@@ -61,11 +61,11 @@ class TipoAcao(str, Enum):
 
 class MetodoAutenticacao(Enum):
     AGENTE = "agente"
-    CHAVE = "chave"
+    CHAVE_PRIVADA = "chave_privada"
     SENHA = "senha"
 
-    class StatusAcesso(Enum):
-    NAO_CONFIGURADO = "nao_configurado"
+class StatusAcesso(Enum):
+    NAO_CONFIGURADO = "nao configurado"
     CONFIGURADO = "configurado"
     AUTENTICADO = "autenticado"
     FALHA = "falha"
