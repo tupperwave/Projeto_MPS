@@ -57,3 +57,15 @@ class TipoAcao(str, Enum):
     REINICIAR_SERVICO = "reiniciar_servico"
     TRANSFERIR_ARQUIVO = "transferir_arquivo"
     WORKFLOW = "workflow"
+
+
+class MetodoAutenticacao(Enum):
+    AGENTE = "agente"
+    CHAVE = "chave"
+    SENHA = "senha"
+
+    class StatusAcesso(Enum):
+    NAO_CONFIGURADO = "nao_configurado"
+    CONFIGURADO = "configurado"
+    AUTENTICADO = "autenticado"
+    FALHA = "falha"
