@@ -59,13 +59,13 @@ class TipoAcao(str, Enum):
     WORKFLOW = "workflow"
 
 
-class MetodoAutenticacao(Enum):
+class MetodoAutenticacao(str, Enum):
     AGENTE = "agente"
     CHAVE_PRIVADA = "chave_privada"
     SENHA = "senha"
 
 class StatusAcesso(Enum):
-    NAO_CONFIGURADO = "nao configurado"
+    NAO_CONFIGURADO = "nao_configurado"
     CONFIGURADO = "configurado"
     AUTENTICADO = "autenticado"
     FALHA = "falha" 

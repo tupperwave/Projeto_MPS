@@ -69,7 +69,7 @@ _MIGRACOES = [
         referencia_segredo TEXT,
         criado_em TEXT NOT NULL,
         atualizado_em TEXT NOT NULL,
-        UNIQUE(host_ip, usuario)
+        UNIQUE(host_ip)
     );
     CREATE INDEX idx_acessos_remotos_host_ip
         ON acessos_remotos(host_ip);

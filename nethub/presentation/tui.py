@@ -807,6 +807,9 @@ class TelaHistorico(Tela):
             return True
         return False
 
+class TelaAcessoHost(Tela):
+    ...
+
 
 # --------------------------------------------------------------------- aplicação
 class NetHubTui:

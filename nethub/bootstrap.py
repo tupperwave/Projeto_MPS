@@ -23,6 +23,7 @@ from .infrastructure.sqlite_repositories import (
     SqliteEvidenceRepository, SqliteHostAnnotationRepository, SqliteHostRepository, SqliteUserRepository,
 )
 from .infrastructure.ssh_adapter import SshExecutor
+from .domain.access import AcessoRemoto
 
 
 @dataclass
@@ -37,6 +38,7 @@ class Container:
     historico: HistoryService
     usuarios: UserService
     anotacoes: HostAnnotationService
+    acessos: RemoteAccessService
 
 
 def caminho_padrao_db() -> Path:
@@ -75,6 +77,7 @@ def criar_container(
         descoberta=DiscoveryService(scanner or NmapAdapter(), inventario, evidencias),
         menu=ContextMenuService(registro),
         executor=ActionExecutor(remoto or SshExecutor(usuario=usuario, identidade=identidade), evidencias),
+        acessos=RemoteAccessService(),
         evidencias=evidencias,
         historico=HistoryService(repo_evid),
         usuarios=usuarios,

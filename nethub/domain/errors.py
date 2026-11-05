@@ -61,5 +61,14 @@ class FalhaPersistenciaUsuarios(NetHubError):
     """Falha ao gravar ou consultar usuários no armazenamento permanente."""
 
 
+class FalhaPersistenciaAcessosRemotos(NetHubError):
+    """Falha ao gravar ou consultar acessos remotos no armazenamento permanente."""
+
+
+class AcessoRemotoDuplicado(NetHubError):
+    """Já existe um acesso remoto com os mesmos dados."""
+
+
 class FalhaBancoDados(NetHubError):
     """Falha ao abrir ou preparar o banco de dados local."""
+

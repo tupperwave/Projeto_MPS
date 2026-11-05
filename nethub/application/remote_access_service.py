@@ -1,26 +1,46 @@
 """Serviço de aplicação para gerenciar acessos remotos."""
 
 from dataclasses import dataclass, field
+from typing import Protocol
 
 
-@dataclass(frozen=True)
-class AcessoRemoto:
-	host_ip: str
-	usuario: str
-	senha: str = field(repr=False)
-	porta: int = 22
+from ..domain.access import AcessoRemoto
 
 
 @dataclass(frozen=True)
 class ContextoAcesso:
-	host_ip: str
-	usuario: str
-	senha: str = field(repr=False)
-	porta: int = 22
+    host_ip: str
+    usuario: str
+    senha: str = field(repr=False)
+    porta: int = 22
+
+
+class RemoteAccessRepository(Protocol):
+    def cadastrar(self, acesso: AcessoRemoto) -> AcessoRemoto: ...
+
+    def obter(self, host_ip: str) -> AcessoRemoto | None: ...
+
+    def atualizar(self, acesso: AcessoRemoto) -> AcessoRemoto: ...
+
+    def remover(self, host_ip: str) -> bool: ...
+
+
+class SecretStorePort(Protocol):
+    def salvar(self, segredo: str) -> str: ...
+
+    def recuperar(self, referencia: str) -> str: ...
 
 
 _acessos: dict[str, AcessoRemoto] = {}
 
+class RemoteAccessService:
+    def __init__(
+        self,
+        repositorio: RemoteAccessRepository,
+        segredos: SecretStorePort,
+    ):
+		self._repositorio = repositorio
+		self._segredos = segredos
 
 def cadastrar(
 	host_ip: str,
@@ -28,6 +48,7 @@ def cadastrar(
 	senha: str,
 	porta: int = 22,
 ) -> AcessoRemoto:
+	"""Cadastra ou substitui as credenciais de um host."""
 	"""Cadastra ou substitui as credenciais de um host."""
 	if not host_ip.strip():
 		raise ValueError("host_ip não pode ser vazio")
@@ -44,23 +65,24 @@ def cadastrar(
 
 
 def obter(host_ip: str) -> AcessoRemoto | None:
-	"""Obtém o acesso cadastrado para o host, se existir."""
-	return _acessos.get(host_ip)
+    """Obtém o acesso cadastrado para o host, se existir."""
+    return _acessos.get(host_ip)
 
 
 def remover(host_ip: str) -> bool:
-	"""Remove o acesso do host e informa se ele estava cadastrado."""
-	return _acessos.pop(host_ip, None) is not None
+    """Remove o acesso do host e informa se ele estava cadastrado."""
+    return _acessos.pop(host_ip, None) is not None
 
 
 def resolver_credencial(host_ip: str) -> ContextoAcesso:
-	"""Resolve as credenciais necessárias para acessar um host."""
-	acesso = obter(host_ip)
-	if acesso is None:
-		raise LookupError(f"Nenhum acesso remoto cadastrado para {host_ip}")
-	return ContextoAcesso(
-		host_ip=acesso.host_ip,
-		usuario=acesso.usuario,
-		senha=acesso.senha,
-		porta=acesso.porta,
-	)
+    """Resolve as credenciais necessárias para acessar um host."""
+    acesso = obter(host_ip)
+    if acesso is None:
+        raise LookupError(f"Nenhum acesso remoto cadastrado para {host_ip}")
+    return ContextoAcesso(
+        host_ip=acesso.host_ip,
+        usuario=acesso.usuario,
+        senha=acesso.senha,
+        porta=acesso.porta,
+    )
+
