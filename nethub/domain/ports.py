@@ -9,6 +9,7 @@ from .enums import NivelRisco, TipoConfirmacao
 from .annotations import AnotacaoHost
 from .models import AlvoRede, Evidencia, FiltroHistorico, Host, ResultadoExecucao
 from .users import Usuario
+from .access import AcessoRemoto
 
 
 class NetworkScannerPort(ABC):
@@ -105,9 +106,8 @@ class RemoteAccessRepository(ABC):
 
     @abstractmethod
     def excluir_por_host(self, host_ip: str) -> bool:
-
         ...
-        
+
 class SecretStorePort(ABC):
     @abstractmethod
     def salvar(self, referencia: str, segredo: str) -> None:

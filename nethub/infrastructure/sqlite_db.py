@@ -71,6 +71,8 @@ _MIGRACOES = [
         atualizado_em TEXT NOT NULL,
         UNIQUE(host_ip, usuario)
     );
+    CREATE INDEX idx_acessos_remotos_host_ip
+        ON acessos_remotos(host_ip);
     """,
 
 

@@ -8,13 +8,24 @@ from typing import Iterator
 
 from ..domain.enums import (
     NivelRisco, StatusCapacidade, StatusExecucao, TipoAcao, TipoCapacidade,
+    TipoAcessoRemoto,
 )
-from ..domain.errors import FalhaPersistenciaUsuarios, UsuarioDuplicado
+from ..domain.errors import (
+    FalhaPersistenciaAcessosRemotos, FalhaPersistenciaUsuarios,
+    PerfilAcessoRemotoDuplicado, UsuarioDuplicado,
+)
 from ..domain.annotations import AnotacaoHost
 from ..domain.models import (
-    Capacidade, Evidencia, FiltroHistorico, Host, PortaServico, de_iso, para_iso,
+    Capacidade, Evidencia, FiltroHistorico, Host, PerfilAcessoRemoto,
+    PortaServico, de_iso, para_iso,
 )
-from ..domain.ports import EvidenceRepository, HostRepository, HostAnnotationRepository, UserRepository
+from ..domain.ports import (
+    EvidenceRepository,
+    HostRepository,
+    HostAnnotationRepository,
+    RemoteAccessRepository,
+    UserRepository,
+)
 from ..domain.users import Usuario
 from .sqlite_db import SqliteDatabase
 
@@ -241,3 +252,73 @@ class SqliteHostAnnotationRepository(HostAnnotationRepository):
             id=linha["id"], host_ip=linha["host_ip"], conteudo=linha["conteudo"],
             criada_em=de_iso(linha["criada_em"]), atualizada_em=de_iso(linha["atualizada_em"]),
         )
+
+
+class SqliteRemoteAccessRepository(RemoteAccessRepository):
+    """Repositório SQLite para acessos remotos."""
+
+    def __init__(self, banco: SqliteDatabase) -> None:
+        self._db = banco
+
+    def salvar(self, perfil: PerfilAcessoRemoto) -> PerfilAcessoRemoto:
+        """Salva ou atualiza o perfil associado ao host.
+
+        O host é a chave natural da tabela; uma segunda inserção é tratada
+        explicitamente para que a porta não vaze detalhes do SQLite.
+        """
+        try:
+            self._db.executar(
+                """
+                INSERT INTO acessos_remotos (host_ip, tipo, porta, usuario)
+                VALUES (?, ?, ?, ?)
+                """,
+                (perfil.host_ip, perfil.tipo.value, perfil.porta, perfil.usuario),
+            )
+            return perfil
+        except sqlite3.IntegrityError as exc:
+            raise PerfilAcessoRemotoDuplicado(
+                f"Já existe um perfil de acesso remoto para o host {perfil.host_ip!r}."
+            ) from exc
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaAcessosRemotos(
+                "Não foi possível salvar o perfil de acesso remoto no SQLite."
+            ) from exc
+
+    def buscar_por_host(self, host_ip: str) -> PerfilAcessoRemoto | None:
+        try:
+            linhas = self._db.consultar(
+                "SELECT host_ip, tipo, porta, usuario FROM acessos_remotos WHERE host_ip = ?",
+                (host_ip,),
+            )
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaAcessosRemotos(
+                "Não foi possível consultar o perfil de acesso remoto no SQLite."
+            ) from exc
+        return self._para_perfil(linhas[0]) if linhas else None
+
+    def excluir_por_host(self, host_ip: str) -> bool:
+        try:
+            return self._db.executar(
+                "DELETE FROM acessos_remotos WHERE host_ip = ?", (host_ip,)
+            ).rowcount > 0
+        except sqlite3.Error as exc:
+            raise FalhaPersistenciaAcessosRemotos(
+                "Não foi possível excluir o perfil de acesso remoto no SQLite."
+            ) from exc
+
+    @staticmethod
+    def _para_perfil(linha: sqlite3.Row) -> PerfilAcessoRemoto:
+        try:
+            tipo = TipoAcessoRemoto(linha["tipo"])
+            return PerfilAcessoRemoto(
+                host_ip=linha["host_ip"],
+                tipo=tipo,
+                porta=linha["porta"],
+                usuario=linha["usuario"],
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise FalhaPersistenciaAcessosRemotos(
+                "Os dados de acesso remoto no SQLite estão inválidos."
+            ) from exc
+
+

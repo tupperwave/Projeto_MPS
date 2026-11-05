@@ -68,4 +68,4 @@ class StatusAcesso(Enum):
     NAO_CONFIGURADO = "nao configurado"
     CONFIGURADO = "configurado"
     AUTENTICADO = "autenticado"
-    FALHA = "falha"
+    FALHA = "falha" 
