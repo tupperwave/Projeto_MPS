@@ -6,6 +6,7 @@ continuam passando pelos serviços injetados pelo Container.
 from __future__ import annotations
 
 import curses
+import inspect
 import os
 import sys
 from datetime import datetime
@@ -312,7 +313,7 @@ class Terminal:
 
     def aviso(self, texto: str) -> None:
         """Exibe um estado transitório antes de uma operação síncrona."""
-        h, w = self.tamanho()
+        h, _ = self.tamanho()
         self._limpar()
         self._cabecalho_global("Operação em andamento")
         self._escrever(max(1, h // 2 - 1), 2, texto, self.tema.atributo(Tema.AVISO, negrito=True))
@@ -431,7 +432,7 @@ class Tela:
     def itens(self) -> list[str]:
         return []
 
-    def tratar_tecla(self, tecla, app: "NetHubTui") -> bool:
+    def tratar_tecla(self, _tecla, _app: "NetHubTui") -> bool:
         return False
 
     def ajustar_topo(self, altura: int) -> None:
@@ -621,7 +622,7 @@ class TelaAjuda(Tela):
 class TelaHosts(Tela):
     titulo = "Hosts"
     selecionavel = True
-    rodape = "↑↓ navegar  Enter detalhes  d descobrir  t tag  f texto  h histórico  u usuários  r atualizar  ? ajuda  q voltar"
+    rodape = "↑↓ navegar  Enter detalhes  a acesso remoto  d descobrir  t tag  f texto  h histórico  u usuários  r atualizar  ? ajuda  q voltar"
 
     def __init__(self, app: "NetHubTui") -> None:
         super().__init__()
@@ -687,6 +688,9 @@ class TelaHosts(Tela):
             app.empilhar(TelaHistorico(app))
         elif tecla == "u":
             app.empilhar(TelaUsuarios(app))
+        elif tecla == "a" and self.hosts:
+            posicao = min(self.indice, len(self.hosts) - 1)
+            app.empilhar(TelaAcessoHost(self.hosts[posicao].ip, app))
         elif tecla in ENTER and self.hosts:
             posicao = min(self.indice, len(self.hosts) - 1)
             app.empilhar(TelaDetalheHost(self.hosts[posicao].ip, app))
@@ -696,7 +700,7 @@ class TelaHosts(Tela):
 
 
 class TelaDetalheHost(Tela):
-    rodape = "1-9 executar ação compatível  r atualizar  h histórico do host  ? ajuda  q voltar"
+    rodape = "1-9 executar ação  a acesso remoto  r atualizar  h histórico do host  ? ajuda  q voltar"
 
     def __init__(self, ip: str, app: "NetHubTui") -> None:
         super().__init__()
@@ -719,6 +723,9 @@ class TelaDetalheHost(Tela):
             return True
         if tecla == "h":
             app.empilhar(TelaHistorico(app, alvo=self.ip))
+            return True
+        if tecla == "a":
+            app.empilhar(TelaAcessoHost(self.ip, app))
             return True
         if isinstance(tecla, str) and tecla.isdigit() and tecla != "0":
             numero = int(tecla)
@@ -746,7 +753,7 @@ class TelaUsuarios(Tela):
         self._linhas = [f"{usuario.login}" for usuario in self.usuarios]
 
     def itens(self) -> list[str]:
-        return self._linhas or ["Nenhum usuário cadastrado."]
+        return self._linhas or ["nenhum usuário cadastrado."]
 
     def tratar_tecla(self, tecla, app: "NetHubTui") -> bool:
         if tecla == "r":
@@ -807,17 +814,137 @@ class TelaHistorico(Tela):
             return True
         return False
 
+
 class TelaAcessoHost(Tela):
-    ...
+    """Tela de entrada para as operações remotas disponíveis no host."""
+
+    titulo = "Acesso remoto"
+    cabecalho = ""
+    selecionavel = True
+    rodape = "↑↓ navegar  Enter executar  c usuário  k chave  s senha  u atualizar  x remover  t testar  ? ajuda  q voltar"
+
+    def __init__(self, ip: str, app: "NetHubTui") -> None:
+        super().__init__()
+        self.ip = ip
+        self.host: Host | None = None
+        self.acoes = []
+        self.recarregar(app)
+
+    def recarregar(self, app: "NetHubTui") -> None:
+        self.host = app.c.inventario.obter(self.ip)
+        self.acoes = app.c.menu.acoes_compativeis(self.host)
+        resumo = fmt.resumo_host(self.host)
+        self.cabecalho = f"{self.ip}  |  {resumo}"
+        self._linhas = [
+            f"{numero}. {acao.nome}"
+            for numero, acao in enumerate(self.acoes, start=1)
+        ]
+        if not self._linhas:
+            self._linhas = [
+                "Nenhuma ação remota compatível foi encontrada.",
+                "Verifique a capacidade SSH do host e atualize a tela.",
+            ]
+        self.indice = min(self.indice, max(0, len(self.acoes) - 1))
+
+    def itens(self) -> list[str]:
+        return self._linhas
+
+    def tratar_tecla(self, tecla, app: "NetHubTui") -> bool:
+        if tecla == "r":
+            self.recarregar(app)
+            app.status = "Acesso remoto atualizado."
+            return True
+        if tecla in ENTER and self.acoes and self.host is not None:
+            acao = self.acoes[min(self.indice, len(self.acoes) - 1)]
+            app.rodar_acao(acao, self.host)
+            self.recarregar(app)
+            return True
+        if tecla in ("c", "k", "s", "u", "x", "t"):
+            app.gerenciar_acesso(self.ip, tecla)
+            self.recarregar(app)
+            return True
+        return False
 
 
-# --------------------------------------------------------------------- aplicação
 class NetHubTui:
+    """Orquestra a navegação e mantém a apresentação desacoplada do backend."""
+
     def __init__(self, tela, container: Container) -> None:
         self.t = Terminal(tela)
         self.c = container
         self.status = ""
         self._pilha: list[Tela] = []
+
+    def _servico_acesso(self):
+        """Obtém o serviço de acessos sem acoplar a TUI ao nome do atributo."""
+        for nome in ("acessos", "acesso_ssh", "credenciais"):
+            servico = getattr(self.c, nome, None)
+            if servico is not None:
+                return servico
+        raise NetHubError("Serviço de acessos SSH não está configurado.")
+
+    def _chamar_acesso(self, operacao: str, **dados):
+        servico = self._servico_acesso()
+        nomes = {
+            "c": ("cadastrar_usuario_ssh", "cadastrar_usuario"),
+            "k": ("cadastrar_chave_privada", "cadastrar_chave"),
+            "s": ("cadastrar_senha",),
+            "u": ("atualizar_acesso", "atualizar"),
+            "x": ("remover_acesso", "remover"),
+            "t": ("testar_conexao", "testar"),
+        }
+        metodo = next((getattr(servico, nome, None) for nome in nomes[operacao]), None)
+        if metodo is None:
+            raise NetHubError(f"Operação de acesso SSH '{operacao}' não está disponível.")
+
+        # Aceita serviços com assinaturas diferentes sem enviar dados extras.
+        try:
+            parametros = inspect.signature(metodo).parameters
+            aceitos = {
+                nome: valor for nome, valor in dados.items()
+                if nome in parametros or any(
+                    p.kind is inspect.Parameter.VAR_KEYWORD for p in parametros.values()
+                )
+            }
+            return metodo(**aceitos)
+        except (TypeError, ValueError):
+            return metodo(**dados)
+
+    def gerenciar_acesso(self, ip: str, operacao: str) -> None:
+        """Executa cadastro, manutenção e teste de uma credencial SSH."""
+        login = self.t.pedir_texto(f"Usuário SSH para {ip}: ")
+        if login is None or not login.strip():
+            return
+        dados = {"host_ip": ip, "ip": ip, "login": login.strip(), "usuario": login.strip()}
+        if operacao == "c":
+            dados["senha"] = self.t.pedir_texto("Senha do usuário SSH (oculta): ", ocultar=True)
+            if dados["senha"] is None:
+                return
+        elif operacao == "k":
+            dados["chave_privada"] = self.t.pedir_texto("Caminho ou conteúdo da chave privada: ")
+            if not dados["chave_privada"]:
+                return
+        elif operacao == "s":
+            dados["senha"] = self.t.pedir_texto("Senha SSH (oculta): ", ocultar=True)
+            if dados["senha"] is None:
+                return
+        elif operacao == "x":
+            confirma = self.t.pedir_texto("Digite REMOVER para confirmar: ")
+            if (confirma or "").strip().upper() != "REMOVER":
+                self.status = "Remoção de acesso cancelada."
+                return
+        try:
+            resultado = self._chamar_acesso(operacao, **dados)
+        except NetHubError:
+            raise
+        except (OSError, ValueError) as exc:
+            self.status = f"Falha no acesso SSH: {exc}"
+            return
+        if operacao == "t":
+            self.status = "[OK] Conexão SSH testada com sucesso."
+        else:
+            nomes = {"c": "Usuário SSH", "k": "Chave privada", "s": "Senha", "u": "Acesso", "x": "Acesso"}
+            self.status = f"{nomes[operacao]} atualizado com sucesso." if operacao == "u" else f"{nomes[operacao]} processado com sucesso."
 
     def empilhar(self, tela: Tela) -> None:
         self._pilha.append(tela)

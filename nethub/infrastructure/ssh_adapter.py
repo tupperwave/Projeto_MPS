@@ -35,14 +35,15 @@ class SshExecutor(RemoteExecutorPort):
         self,
         usuario: str | None = None,
         identidade: str | None = None,
+        contexto: ContextoAcesso | None = None,
         connect_timeout_s: int = 10,
         strict_host_key: str = "accept-new",
         binario: str = "ssh",
         runner: Callable = subprocess.run,
     ) -> None:
-        ContextoAcesso(usuario=usuario, identidade=identidade)
-        self._usuario = usuario
-        self._identidade = identidade
+        if contexto is not None and (usuario is not None or identidade is not None):
+            raise ValueError("Informe contexto ou usuario/identidade, não ambos.")
+        self._contexto = contexto or ContextoAcesso(usuario, identidade)
         self._connect_timeout_s = connect_timeout_s
         self._strict = strict_host_key
         self._binario = binario
@@ -51,7 +52,7 @@ class SshExecutor(RemoteExecutorPort):
     def montar_comando(
         self, host: Host, comando: str, contexto: ContextoAcesso | None = None
     ) -> list[str]:
-        contexto = contexto or ContextoAcesso(self._usuario, self._identidade)
+        contexto = contexto or self._contexto
         cmd = [
             self._binario,
             "-p", str(host.porta_ssh),
@@ -67,11 +68,12 @@ class SshExecutor(RemoteExecutorPort):
     def executar(
         self,
         host: Host,
-        acesso: ContextoAcesso,
         comando: str,
         timeout_s: float,
         contexto: ContextoAcesso | None = None,
     ) -> ResultadoExecucao:
+        if timeout_s <= 0:
+            raise ValueError("O timeout deve ser maior que zero.")
         inicio = time.monotonic()
         try:
             proc = self._runner(
@@ -96,4 +98,3 @@ class SshExecutor(RemoteExecutorPort):
         status = StatusExecucao.CONCLUIDA if proc.returncode == 0 else StatusExecucao.FALHA
         # exit 255 do ssh = falha de conexão/autenticação (ou o próprio comando saiu com 255).
         return ResultadoExecucao(status, proc.stdout or "", proc.stderr or "", proc.returncode, duracao)
-

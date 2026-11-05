@@ -23,7 +23,13 @@ class NetworkScannerPort(ABC):
 
 class RemoteExecutorPort(ABC):
     @abstractmethod
-    def executar(self, host: Host, comando: str, timeout_s: float) -> ResultadoExecucao: ...
+    def executar(
+        self,
+        host: Host,
+        comando: str,
+        timeout_s: float,
+        contexto: object | None = None,
+    ) -> ResultadoExecucao: ...
 
 
 class HostRepository(ABC):

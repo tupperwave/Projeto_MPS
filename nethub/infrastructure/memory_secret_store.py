@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from ..domain.ports import SecretStorePort
 
 
-class MemorySecretStore:
+class MemorySecretStore(SecretStorePort):
 	"""Guarda segredos em memória para ser injetado nos serviços da aplicação.
 
 	O conteúdo nunca é impresso nem incluído na representação do objeto. Os
@@ -13,25 +13,25 @@ class MemorySecretStore:
 	"""
 
 	def __init__(self) -> None:
-		self._secrets: dict[str, Any] = {}
+		self._secrets: dict[str, str] = {}
 
-	def save(self, reference: str, secret: Any) -> None:
+	def salvar(self, referencia: str, segredo: str) -> None:
 		"""Cria ou substitui um segredo associado a ``reference``."""
-		self._secrets[reference] = secret
+		if not referencia or not isinstance(segredo, str):
+		    raise ValueError("Referência e segredo são obrigatórios.")
+		self._secrets[referencia] = segredo
 
-	def get(self, reference: str) -> Any | None:
+	def obter(self, referencia: str) -> str | None:
 		"""Retorna o segredo ou ``None`` quando a referência não existe."""
-		return self._secrets.get(reference)
+		return self._secrets.get(referencia)
 
-	def delete(self, reference: str) -> bool:
+	def excluir(self, referencia: str) -> bool:
 		"""Exclui um segredo e informa se a referência existia."""
-		return self._secrets.pop(reference, None) is not None
+		return self._secrets.pop(referencia, None) is not None
 
-	# Nomes explícitos para uso por serviços que preferem a nomenclatura de
-	# segredo, mantendo a mesma implementação e sem expor o armazenamento.
-	set_secret = save
-	get_secret = get
-	delete_secret = delete
+	save = salvar
+	get = obter
+	delete = excluir
 
 	def __repr__(self) -> str:
 		return f"{type(self).__name__}()"

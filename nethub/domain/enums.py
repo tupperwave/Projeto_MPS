@@ -58,10 +58,7 @@ class TipoAcao(str, Enum):
     TRANSFERIR_ARQUIVO = "transferir_arquivo"
     WORKFLOW = "workflow"
 
-class TipoAcessoRemoto(str, Enum):
-    SSH = "ssh"
-    RDP = "rdp"
-    VNC = "vnc"
+
 
 
 class MetodoAutenticacao(str, Enum):

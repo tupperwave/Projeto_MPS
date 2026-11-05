@@ -9,11 +9,11 @@ from typing import Iterator
 
 
 from ..domain.enums import (
-    NivelRisco, StatusCapacidade, StatusExecucao, TipoAcao, TipoCapacidade,
+    MetodoAutenticacao, NivelRisco, StatusCapacidade, StatusExecucao, TipoAcao, TipoCapacidade,
 )
 from ..domain.errors import (
     FalhaPersistenciaAcessosRemotos, FalhaPersistenciaUsuarios,
-    AcessoRemotoDuplicado, UsuarioDuplicado,
+    UsuarioDuplicado,
 )
 from ..domain.annotations import AnotacaoHost
 from ..domain.models import (
@@ -29,7 +29,7 @@ from ..domain.ports import (
 )
 from ..domain.users import Usuario
 from .sqlite_db import SqliteDatabase
-from ..domain.access import AcessoRemoto, MetodoAutenticacao
+from ..domain.access import AcessoRemoto
 def _opt_iso(dt) -> str | None:
     return para_iso(dt) if dt else None
 
@@ -261,24 +261,31 @@ class SqliteRemoteAccessRepository(RemoteAccessRepository):
         self._db = banco
 
     def salvar(self, perfil: AcessoRemoto) -> AcessoRemoto:
-        """Salva ou atualiza o perfil associado ao host.
-
-        O host é a chave natural da tabela; uma segunda inserção é tratada
-        explicitamente para que a porta não vaze detalhes do SQLite.
-        """
         try:
             self._db.executar(
                 """
-                INSERT INTO acessos_remotos (host_ip, metodo, porta, usuario)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO acessos_remotos
+                    (host_ip, usuario, porta, metodo, identidade, referencia_segredo,
+                     criado_em, atualizado_em)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+                ON CONFLICT(host_ip) DO UPDATE SET
+                    usuario=excluded.usuario,
+                    porta=excluded.porta,
+                    metodo=excluded.metodo,
+                    identidade=excluded.identidade,
+                    referencia_segredo=excluded.referencia_segredo,
+                    atualizado_em=datetime('now')
                 """,
-                (perfil.host_ip, perfil.tipo.value, perfil.porta, perfil.usuario),
+                (
+                    perfil.host_ip,
+                    perfil.usuario,
+                    perfil.porta,
+                    perfil.metodo.value,
+                    perfil.identidade,
+                    perfil.referencia_segredo,
+                ),
             )
             return perfil
-        except sqlite3.IntegrityError as exc:
-            raise AcessoRemotoDuplicado(
-                f"Já existe um perfil de acesso remoto para o host {perfil.host_ip!r}."
-            ) from exc
         except sqlite3.Error as exc:
             raise FalhaPersistenciaAcessosRemotos(
                 "Não foi possível salvar o perfil de acesso remoto no SQLite."
@@ -287,7 +294,10 @@ class SqliteRemoteAccessRepository(RemoteAccessRepository):
     def buscar_por_host(self, host_ip: str) -> AcessoRemoto | None:
         try:
             linhas = self._db.consultar(
-                "SELECT host_ip, tipo, porta, usuario FROM acessos_remotos WHERE host_ip = ?",
+                """
+                SELECT host_ip, usuario, porta, metodo, identidade, referencia_segredo
+                FROM acessos_remotos WHERE host_ip = ?
+                """,
                 (host_ip,),
             )
         except sqlite3.Error as exc:
@@ -309,16 +319,16 @@ class SqliteRemoteAccessRepository(RemoteAccessRepository):
     @staticmethod
     def _para_perfil(linha: sqlite3.Row) -> AcessoRemoto:
         try:
-            tipo = MetodoAutenticacao(linha["tipo"])
+            metodo = MetodoAutenticacao(linha["metodo"])
             return AcessoRemoto(
                 host_ip=linha["host_ip"],
-                tipo=tipo,
+                metodo=metodo,
                 porta=linha["porta"],
                 usuario=linha["usuario"],
+                identidade=linha["identidade"],
+                referencia_segredo=linha["referencia_segredo"],
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise FalhaPersistenciaAcessosRemotos(
                 "Os dados de acesso remoto no SQLite estão inválidos."
             ) from exc
-
-

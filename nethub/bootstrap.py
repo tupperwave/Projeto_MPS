@@ -13,14 +13,17 @@ from .application.discovery_service import DiscoveryService
 from .application.evidence_service import EvidenceService, HistoryService
 from .application.inventory_service import InventoryService
 from .application.annotation_service import HostAnnotationService
+from .application.remote_access_service import RemoteAccessService
 from .application.user_service import UserService
 from .domain.errors import FalhaBancoDados
 from .domain.ports import NetworkScannerPort, RemoteExecutorPort
 from .infrastructure.nmap_adapter import NmapAdapter
+from .infrastructure.memory_secret_store import MemorySecretStore
 from .infrastructure.memory_user_repository import MemoryUserRepository
 from .infrastructure.sqlite_db import SqliteDatabase
 from .infrastructure.sqlite_repositories import (
-    SqliteEvidenceRepository, SqliteHostAnnotationRepository, SqliteHostRepository, SqliteUserRepository,
+    SqliteEvidenceRepository, SqliteHostAnnotationRepository, SqliteHostRepository,
+    SqliteRemoteAccessRepository, SqliteUserRepository,
 )
 from .infrastructure.ssh_adapter import SshExecutor
 
@@ -38,6 +41,7 @@ class Container:
     historico: HistoryService
     usuarios: UserService
     anotacoes: HostAnnotationService
+    acessos: RemoteAccessService
     
 
 
@@ -59,6 +63,7 @@ def criar_container(
         raise FalhaBancoDados("Não foi possível abrir ou inicializar o banco SQLite.") from exc
     repo_hosts = SqliteHostRepository(banco)
     repo_evid = SqliteEvidenceRepository(banco)
+    repo_acessos = SqliteRemoteAccessRepository(banco)
     evidencias = EvidenceService(repo_evid)
     inventario = InventoryService(repo_hosts, CapabilityDetector())
     registro = registro_padrao()
@@ -70,6 +75,7 @@ def criar_container(
         raise ValueError("Persistência de usuários deve ser 'memoria' ou 'sqlite'.")
     usuarios = UserService(repo_usuarios)
     anotacoes = HostAnnotationService(SqliteHostAnnotationRepository(banco), repo_hosts)
+    acessos = RemoteAccessService(repo_acessos, MemorySecretStore())
     return Container(
         banco=banco,
         registro=registro,
@@ -81,4 +87,5 @@ def criar_container(
         historico=HistoryService(repo_evid),
         usuarios=usuarios,
         anotacoes=anotacoes,
+        acessos=acessos,
     )
