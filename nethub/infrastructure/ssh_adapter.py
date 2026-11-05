@@ -67,6 +67,7 @@ class SshExecutor(RemoteExecutorPort):
     def executar(
         self,
         host: Host,
+        acesso: ContextoAcesso,
         comando: str,
         timeout_s: float,
         contexto: ContextoAcesso | None = None,

@@ -1,88 +1,65 @@
 """Serviço de aplicação para gerenciar acessos remotos."""
 
 from dataclasses import dataclass, field
-from typing import Protocol
-
-
-from ..domain.access import AcessoRemoto
-
+from domain.enums import MetodoAutenticacao
+from ..domain.ports import RemoteAccessRepository, SecretStorePort
+from domain.access import AcessoRemoto
 
 @dataclass(frozen=True)
 class ContextoAcesso:
     host_ip: str
     usuario: str
-    senha: str = field(repr=False)
-    porta: int = 22
+    porta: int
+    metodo: MetodoAutenticacao
+    identidade: str | None = None
+    senha: str | None = field(default=None, repr=False)
 
-
-class RemoteAccessRepository(Protocol):
-    def cadastrar(self, acesso: AcessoRemoto) -> AcessoRemoto: ...
-
-    def obter(self, host_ip: str) -> AcessoRemoto | None: ...
-
-    def atualizar(self, acesso: AcessoRemoto) -> AcessoRemoto: ...
-
-    def remover(self, host_ip: str) -> bool: ...
-
-
-class SecretStorePort(Protocol):
-    def salvar(self, segredo: str) -> str: ...
-
-    def recuperar(self, referencia: str) -> str: ...
-
-
-_acessos: dict[str, AcessoRemoto] = {}
 
 class RemoteAccessService:
     def __init__(
         self,
         repositorio: RemoteAccessRepository,
-        segredos: SecretStorePort,
-    ):
-		self._repositorio = repositorio
-		self._segredos = segredos
+        armazenamento_segredos: SecretStorePort,
+    ) -> None:
+        self._repositorio = repositorio
+        self._armazenamento_segredos = armazenamento_segredos
 
-def cadastrar(
-	host_ip: str,
-	usuario: str,
-	senha: str,
-	porta: int = 22,
-) -> AcessoRemoto:
-	"""Cadastra ou substitui as credenciais de um host."""
-	"""Cadastra ou substitui as credenciais de um host."""
-	if not host_ip.strip():
-		raise ValueError("host_ip não pode ser vazio")
-	if not usuario:
-		raise ValueError("usuario não pode ser vazio")
-	if not senha:
-		raise ValueError("senha não pode ser vazia")
-	if porta < 1 or porta > 65535:
-		raise ValueError("porta deve estar entre 1 e 65535")
+    def cadastrar(
+        self,
+        acesso: AcessoRemoto,
+        segredo: str | None = None,
+    ) -> AcessoRemoto:
+        """Persiste um acesso já validado e, se informado, sua senha."""
+        self._repositorio.salvar(acesso)
 
-	acesso = AcessoRemoto(host_ip, usuario, senha, porta)
-	_acessos[host_ip] = acesso
-	return acesso
+        if segredo is not None:
+            self._armazenamento_segredos.salvar(acesso.host_ip, segredo)
 
+        return acesso
 
-def obter(host_ip: str) -> AcessoRemoto | None:
-    """Obtém o acesso cadastrado para o host, se existir."""
-    return _acessos.get(host_ip)
+    def obter(self, host_ip: str) -> AcessoRemoto | None:
+        return self._repositorio.obter(host_ip)
 
+    def remover(self, host_ip: str) -> bool:
+        acesso = self.obter(host_ip)
+        if acesso is None:
+            return False
 
-def remover(host_ip: str) -> bool:
-    """Remove o acesso do host e informa se ele estava cadastrado."""
-    return _acessos.pop(host_ip, None) is not None
+        self._repositorio.remover(host_ip)
+        self._armazenamento_segredos.remover(host_ip)
+        return True
 
+    def resolver_credencial(self, host_ip: str) -> ContextoAcesso:
+        acesso = self.obter(host_ip)
+        if acesso is None:
+            raise LookupError(f"Acesso remoto não encontrado: {host_ip}")
 
-def resolver_credencial(host_ip: str) -> ContextoAcesso:
-    """Resolve as credenciais necessárias para acessar um host."""
-    acesso = obter(host_ip)
-    if acesso is None:
-        raise LookupError(f"Nenhum acesso remoto cadastrado para {host_ip}")
-    return ContextoAcesso(
-        host_ip=acesso.host_ip,
-        usuario=acesso.usuario,
-        senha=acesso.senha,
-        porta=acesso.porta,
-    )
-
+        senha = self._armazenamento_segredos.obter(host_ip)
+        return ContextoAcesso(
+            host_ip=acesso.host_ip,
+            usuario=acesso.usuario,
+            porta=acesso.porta,
+            metodo=acesso.metodo,
+            identidade=acesso.identidade,
+            senha=senha,
+        )

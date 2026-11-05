@@ -1,13 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
+from .enums import MetodoAutenticacao
 import re
-
-
-class MetodoAutenticacao(Enum):
-	AGENTE = "agente"
-	CHAVE_PRIVADA = "chave_privada"
-	SENHA = "senha"
-
 
 
 @dataclass(frozen=True)
