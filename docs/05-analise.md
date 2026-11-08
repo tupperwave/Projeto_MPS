@@ -1,5 +1,7 @@
 # 5. Análise
 
+O modelo integrado que contempla os cadastros de usuários e anotações, a fachada e o Singleton até a Sprint 3 está consolidado também na seção 5 do [Documento do Projeto — Versão 2](09-documento-projeto-v2.md).
+
 ## Modelo de classes atualizado — Sprint 3
 
 O modelo abaixo inclui a entidade nova, seu vínculo com `Host`, persistência e a fachada única para os gerentes da aplicação.
