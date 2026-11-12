@@ -116,3 +116,12 @@ class LoggerPort(ABC):
     @abstractmethod
     def info(self, mensagem: str, **dados: object) -> None:
         ...
+
+    def debug(self, mensagem: str, **dados: object) -> None:
+        self.info(mensagem, **dados)
+
+    def warning(self, mensagem: str, **dados: object) -> None:
+        self.info(mensagem, **dados)
+
+    def error(self, mensagem: str, **dados: object) -> None:
+        self.info(mensagem, **dados)

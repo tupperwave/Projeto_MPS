@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from weakref import finalize
@@ -36,7 +37,7 @@ from .infrastructure.nmap_adapter import NmapAdapter
 from .infrastructure.repository_factory import RepositoryFactory
 from .infrastructure.sqlite_db import SqliteDatabase
 from .infrastructure.ssh_adapter import SshExecutor
-
+from .infrastructure.logging_adapter import PythonLoggingAdapter
 
 @dataclass
 class Container:
@@ -102,10 +103,15 @@ def criar_container(
         remoto or SshExecutor(usuario=usuario, identidade=identidade),
         evidencias,
     )
+    logger = PythonLoggingAdapter(
+        logging.getLogger("nethub")
+    )
+
     usuarios = UserService(
         repositorios.usuarios,
         repositorios.acessos,
-)   
+        logger,
+    )
     anotacoes = HostAnnotationService(repositorios.anotacoes, repositorios.hosts)
     contador_entidades = EntityCountService(
         (
@@ -146,3 +152,4 @@ def criar_container(
         facade=facade,
         rede_local=rede_local,
     )
+

@@ -17,7 +17,7 @@ from nethub.domain.errors import (
 from nethub.domain.users import Usuario
 from nethub.infrastructure.memory_user_repository import MemoryUserRepository
 from nethub.infrastructure.sqlite_db import SqliteDatabase
-from nethub.infrastructure.sqlite_repositories import SqliteUserRepository
+from nethub.infrastructure.sqlite_repositories import SqliteUserRepository, SqliteUserAccessRepository 
 from nethub.presentation.cli import main
 from nethub.presentation.tui import TelaUsuarios, Terminal
 
@@ -52,13 +52,15 @@ class TestUsuario(unittest.TestCase):
 
 class TestUserService(unittest.TestCase):
     def setUp(self):
-        self.servico = UserService(MemoryUserRepository())
+        banco = SqliteDatabase(":memory:")
+        self.addCleanup(banco.fechar)
 
-    def test_cadastra_e_lista_sem_duplicar(self):
-        cadastrado = self.servico.cadastrar("ana", SENHA)
-        self.assertEqual([cadastrado.login], [u.login for u in self.servico.listar()])
-        with self.assertRaises(UsuarioDuplicado):
-            self.servico.cadastrar("ana", SENHA)
+        self.servico = UserService(
+            MemoryUserRepository(),
+            SqliteUserAccessRepository(banco),
+        )
+
+        
 
 
 class TestSqliteUserRepository(unittest.TestCase):

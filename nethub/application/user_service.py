@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from ..domain.models import AcessoUsuario
-from ..domain.ports import UserAccessRepository, UserRepository
+from ..domain.ports import UserAccessRepository, UserRepository,  LoggerPort
 from ..domain.users import Usuario
 
 
@@ -13,9 +13,11 @@ class UserService:
         self,
         repositorio: UserRepository,
         repositorio_acessos: UserAccessRepository,
+        logger: LoggerPort,
     ) -> None:
         self._repositorio = repositorio
         self._repositorio_acessos = repositorio_acessos
+        self._logger = logger
 
     def cadastrar(self, login: str, senha: str) -> Usuario:
         usuario = Usuario(login, senha)
@@ -31,4 +33,13 @@ class UserService:
             ocorrido_em=datetime.now(timezone.utc),
             sucesso=sucesso,
         )
-        return self._repositorio_acessos.registrar(acesso)
+
+        persistido = self._repositorio_acessos.registrar(acesso)
+
+        self._logger.info(
+            "Tentativa de acesso registrada",
+            login=login,
+            sucesso=sucesso,
+        )
+
+        return persistido
