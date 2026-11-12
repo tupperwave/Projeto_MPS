@@ -7,7 +7,7 @@ name = "nethub"
 version = "0.1.0"
 description = "NetHub - plataforma terminal-first para administração de infraestrutura (MVP)"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["reportlab>=4.0,<5.0",]
 
 [project.scripts]
 nethub = "nethub.presentation.cli:main"

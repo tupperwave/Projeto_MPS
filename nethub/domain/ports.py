@@ -7,8 +7,9 @@ from typing import Iterator
 
 from .enums import NivelRisco, TipoConfirmacao
 from .annotations import AnotacaoHost
-from .models import AlvoRede, Evidencia, FiltroHistorico, Host, ResultadoExecucao
+from .models import AlvoRede, Evidencia, FiltroHistorico, Host, ResultadoExecucao, AcessoUsuario, EstatisticaAcesso
 from .users import Usuario
+
 
 
 class NetworkScannerPort(ABC):
@@ -98,3 +99,29 @@ class ConfirmationPort(ABC):
 
     @abstractmethod
     def confirmar(self, pedido: PedidoConfirmacao) -> bool: ...
+
+
+
+class UserAccessRepository(ABC):
+    @abstractmethod
+    def registrar(self, acesso: AcessoUsuario) -> AcessoUsuario:
+        ...
+
+    @abstractmethod
+    def estatisticas(self) -> list[EstatisticaAcesso]:
+        ...
+
+
+class LoggerPort(ABC):
+    @abstractmethod
+    def info(self, mensagem: str, **dados: object) -> None:
+        ...
+
+    def debug(self, mensagem: str, **dados: object) -> None:
+        self.info(mensagem, **dados)
+
+    def warning(self, mensagem: str, **dados: object) -> None:
+        self.info(mensagem, **dados)
+
+    def error(self, mensagem: str, **dados: object) -> None:
+        self.info(mensagem, **dados)

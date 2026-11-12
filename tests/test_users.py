@@ -5,6 +5,10 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
+from nethub.domain.ports import LoggerPort
+import logging
+from unittest.mock import Mock
+from nethub.infrastructure.logging_adapter import PythonLoggingAdapter
 
 from nethub.application.user_service import UserService
 from nethub.bootstrap import criar_container
@@ -17,7 +21,7 @@ from nethub.domain.errors import (
 from nethub.domain.users import Usuario
 from nethub.infrastructure.memory_user_repository import MemoryUserRepository
 from nethub.infrastructure.sqlite_db import SqliteDatabase
-from nethub.infrastructure.sqlite_repositories import SqliteUserRepository
+from nethub.infrastructure.sqlite_repositories import SqliteUserRepository, SqliteUserAccessRepository 
 from nethub.presentation.cli import main
 from nethub.presentation.tui import TelaUsuarios, Terminal
 
@@ -52,13 +56,27 @@ class TestUsuario(unittest.TestCase):
 
 class TestUserService(unittest.TestCase):
     def setUp(self):
-        self.servico = UserService(MemoryUserRepository())
+        banco = SqliteDatabase(":memory:")
+        self.addCleanup(banco.fechar)
+
+        self.logger = FakeLogger()
+        self.servico = UserService(
+            MemoryUserRepository(),
+            SqliteUserAccessRepository(banco),
+            self.logger,
+        )
 
     def test_cadastra_e_lista_sem_duplicar(self):
         cadastrado = self.servico.cadastrar("ana", SENHA)
-        self.assertEqual([cadastrado.login], [u.login for u in self.servico.listar()])
+
+        self.assertEqual(
+            [cadastrado.login],
+            [usuario.login for usuario in self.servico.listar()],
+        )
+
         with self.assertRaises(UsuarioDuplicado):
             self.servico.cadastrar("ana", SENHA)
+
 
 
 class TestSqliteUserRepository(unittest.TestCase):
@@ -173,6 +191,24 @@ class TestCliUsuarios(unittest.TestCase):
                     self.assertNotIn("Traceback", erro)
 
 
+class FakeLogger(LoggerPort):
+    def __init__(self) -> None:
+        self.mensagens = []
+
+    def info(self, mensagem: str, **dados: object) -> None:
+        self.mensagens.append((mensagem, dados))
+
+def test_adapter_envia_mensagem_para_logger() -> None:
+    logger = Mock(spec=logging.Logger)
+    adapter = PythonLoggingAdapter(logger)
+
+    adapter.info(
+        "Tentativa de acesso registrada",
+        login="ana",
+        sucesso=True,
+    )
+
+
 class TestTelaUsuarios(unittest.TestCase):
     def test_lista_e_cadastro_com_senha_mascarada(self):
         class TerminalFake:
@@ -226,7 +262,6 @@ class TestTelaUsuarios(unittest.TestCase):
         terminal = Terminal(tela)
         self.assertEqual(terminal.pedir_texto("Senha: ", ocultar=True), SENHA)
         self.assertNotIn(SENHA, "".join(tela.textos))
-
 
 if __name__ == "__main__":
     unittest.main()

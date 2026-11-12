@@ -16,7 +16,10 @@ from ..domain.errors import NetHubError, RegistroNaoEncontrado
 from ..domain.models import AlvoRede, FiltroHistorico
 from ..domain.ports import ConfirmationPort, PedidoConfirmacao
 from . import formatacao as fmt
-
+from ..application.access_report import (
+    HtmlAccessReport,
+    PdfAccessReport,
+)
 COD_OK, COD_FALHA, COD_ERRO, COD_CANCELADO = 0, 1, 2, 3
 
 
@@ -150,6 +153,21 @@ def _parser() -> argparse.ArgumentParser:
     cadastrar.add_argument("login")
     usuarios_sub.add_parser("listar", help="lista usuários cadastrados")
 
+    relatorio = sub.add_parser(
+        "relatorio-acessos",
+        help="gera estatísticas de acesso dos usuários",
+    )
+    relatorio.add_argument(
+        "--formato",
+        choices=("html", "pdf"),
+        required=True,
+    )
+    relatorio.add_argument(
+        "--saida",
+        required=True,
+        help="arquivo de saída",
+    )
+
     anotacoes = sub.add_parser("anotacoes", help="gerencia anotações vinculadas a hosts")
     anotacoes_sub = anotacoes.add_subparsers(dest="anotacoes_cmd", required=True)
     criar_anotacao = anotacoes_sub.add_parser("criar", help="cria uma anotação para um host existente")
@@ -169,6 +187,8 @@ def _parser() -> argparse.ArgumentParser:
     t.add_argument("operacao", choices=["add", "rm"])
     t.add_argument("ip")
     t.add_argument("nome")
+
+
 
     tui = sub.add_parser("tui", help="abre a interface de terminal interativa")
     tui.add_argument("--usuario")
@@ -218,6 +238,33 @@ def main(argv: list[str] | None = None, container: Container | None = None, entr
     finally:
         if criado_aqui and c is not None:
             c.fechar()
+
+def gerar_relatorio_acessos(
+    container: Container,
+    args: argparse.Namespace,
+) -> int:
+    if args.formato == "html":
+        relatorio = HtmlAccessReport()
+    elif args.formato == "pdf":
+        relatorio = PdfAccessReport()
+    else:
+        raise ValueError(
+            f"Formato inválido: {args.formato}"
+        )
+
+    conteudo = container.relatorios_acesso.gerar(
+        relatorio
+    )
+
+    with open(args.saida, "wb") as arquivo:
+        arquivo.write(conteudo)
+
+    print(
+        f"Relatório {args.formato.upper()} "
+        f"salvo em {args.saida}."
+    )
+
+    return COD_OK
 
 
 def _despachar(args, c: Container, entrada) -> int:
@@ -320,6 +367,10 @@ def _despachar(args, c: Container, entrada) -> int:
         executar_tui(c)
         return COD_OK
 
+    
+    if args.cmd == "relatorio-acessos":
+        return gerar_relatorio_acessos(c, args)
+    
     return COD_ERRO
 
 
