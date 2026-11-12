@@ -1,5 +1,5 @@
+import unittest
 from unittest.mock import Mock
-
 
 from nethub.infrastructure.memory_user_repository import MemoryUserRepository
 from nethub.infrastructure.repository_factory import RepositoryFactory
@@ -11,37 +11,38 @@ from nethub.infrastructure.sqlite_repositories import (
 	SqliteUserRepository,
 )
 
+class TestRepositoryFactory(unittest.TestCase):
+	def setUp(self) -> None:
+		self.banco = Mock(spec=SqliteDatabase)
 
-def test_criar_monta_a_familia_de_repositorios_com_usuarios_em_memoria(
-) -> None:
-	banco = Mock(spec=SqliteDatabase)
-	repositorios = RepositoryFactory(banco).criar()
+	def test_criar_monta_a_familia_de_repositorios_com_usuarios_em_memoria(
+		self,
+	) -> None:
+		repositorios = RepositoryFactory(self.banco).criar()
 
-	assert isinstance(repositorios.hosts, SqliteHostRepository)
-	assert isinstance(repositorios.evidencias, SqliteEvidenceRepository)
-	assert isinstance(repositorios.usuarios, MemoryUserRepository)
-	assert isinstance(repositorios.anotacoes, SqliteHostAnnotationRepository)
+		self.assertIsInstance(repositorios.hosts, SqliteHostRepository)
+		self.assertIsInstance(repositorios.evidencias, SqliteEvidenceRepository)
+		self.assertIsInstance(repositorios.usuarios, MemoryUserRepository)
+		self.assertIsInstance(
+			repositorios.anotacoes,
+			SqliteHostAnnotationRepository,
+		)
 
+	def test_criar_monta_repositorio_de_usuarios_sqlite_quando_configurado(
+		self,
+	) -> None:
+		repositorios = RepositoryFactory(
+			self.banco,
+			persistencia_usuarios="sqlite",
+		).criar()
 
-def test_criar_monta_repositorio_de_usuarios_sqlite_quando_configurado(
-) -> None:
-	banco = Mock(spec=SqliteDatabase)
-	repositorios = RepositoryFactory(
-		banco,
-		persistencia_usuarios="sqlite",
-	).criar()
+		self.assertIsInstance(repositorios.usuarios, SqliteUserRepository)
 
-	assert isinstance(repositorios.usuarios, SqliteUserRepository)
+	def test_criar_rejeita_persistencia_de_usuarios_desconhecida(self) -> None:
+		fabrica = RepositoryFactory(self.banco, persistencia_usuarios="invalida")
 
-
-def test_criar_rejeita_persistencia_de_usuarios_desconhecida(
-) -> None:
-	banco = Mock(spec=SqliteDatabase)
-	fabrica = RepositoryFactory(banco, persistencia_usuarios="invalida")
-
-	try:
-		fabrica.criar()
-	except ValueError as erro:
-		assert str(erro) == "Persistência de usuários deve ser 'memoria' ou 'sqlite'."
-	else:
-		assert False, "RepositoryFactory deveria rejeitar persistência inválida"
+		with self.assertRaisesRegex(
+			ValueError,
+			r"Persistência de usuários deve ser 'memoria' ou 'sqlite'\.",
+		):
+			fabrica.criar()

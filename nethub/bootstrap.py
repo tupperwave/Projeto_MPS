@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import logging
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from weakref import finalize
 
+from nethub.application.access_report import UserAccessReportService
 from .application.action_executor import ActionExecutor
 from .application.action_registry import (
     ActionRegistry,
@@ -36,6 +39,7 @@ from .infrastructure.nmap_adapter import NmapAdapter
 from .infrastructure.repository_factory import RepositoryFactory
 from .infrastructure.sqlite_db import SqliteDatabase
 from .infrastructure.ssh_adapter import SshExecutor
+from .infrastructure.logging_adapter import PythonLoggingAdapter
 
 
 @dataclass
@@ -54,6 +58,7 @@ class Container:
     contador_entidades: EntityCountService
     facade_scope: FacadeSingletonScope
     facade: FacadeSingletonController
+    relatorios_acesso: UserAccessReportService
     rede_local: LocalNetworkDetectorPort
     _finalizador: finalize = field(init=False, repr=False, compare=False)
 
@@ -97,15 +102,21 @@ def criar_container(
     historico = HistoryService(repositorios.evidencias)
     inventario = InventoryService(repositorios.hosts, CapabilityDetector())
     descoberta = DiscoveryService(scanner or NmapAdapter(), inventario, evidencias)
+    relatorios_acesso = UserAccessReportService(repositorios.acessos)
     menu = ContextMenuService(registro)
     executor = ActionExecutor(
         remoto or SshExecutor(usuario=usuario, identidade=identidade),
         evidencias,
     )
+    logger = PythonLoggingAdapter(
+        logging.getLogger("nethub")
+    )
+
     usuarios = UserService(
         repositorios.usuarios,
         repositorios.acessos,
-)   
+        logger,
+    )
     anotacoes = HostAnnotationService(repositorios.anotacoes, repositorios.hosts)
     contador_entidades = EntityCountService(
         (
@@ -138,6 +149,7 @@ def criar_container(
         executor=executor,
         evidencias=evidencias,
         historico=historico,
+        relatorios_acesso=relatorios_acesso,
         usuarios=usuarios,
         anotacoes=anotacoes,
         gerentes=gerentes,
@@ -146,3 +158,5 @@ def criar_container(
         facade=facade,
         rede_local=rede_local,
     )
+
+

@@ -29,6 +29,7 @@ class Repositories:
     evidencias: EvidenceRepository
     usuarios: UserRepository
     anotacoes: HostAnnotationRepository
+    acessos: UserAccessRepository
 
 
 class RepositoryFactory:
