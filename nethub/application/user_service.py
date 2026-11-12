@@ -4,8 +4,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from ..domain.models import AcessoUsuario
-from ..domain.ports import UserAccessRepository, UserRepository,  LoggerPort
 from ..domain.users import Usuario
+from ..domain.ports import (
+    LoggerPort,
+    UserAccessRepository,
+    UserRepository,
+)
 
 
 class UserService:
@@ -45,8 +49,12 @@ class UserService:
         return persistido
 
     def autenticar(self, login: str, senha: str) -> bool:
-        """Autentica o usuário e registra a tentativa de acesso."""
         usuario = self._repositorio.buscar_por_login(login)
-        sucesso = usuario is not None and usuario.senha == senha
+
+        sucesso = (
+            usuario is not None
+            and usuario.verificar_senha(senha)
+        )
+
         self.registrar_acesso(login, sucesso)
         return sucesso

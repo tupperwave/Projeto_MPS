@@ -16,7 +16,10 @@ from ..domain.errors import NetHubError, RegistroNaoEncontrado
 from ..domain.models import AlvoRede, FiltroHistorico
 from ..domain.ports import ConfirmationPort, PedidoConfirmacao
 from . import formatacao as fmt
-
+from ..application.access_report import (
+    HtmlAccessReport,
+    PdfAccessReport,
+)
 COD_OK, COD_FALHA, COD_ERRO, COD_CANCELADO = 0, 1, 2, 3
 
 
@@ -236,6 +239,33 @@ def main(argv: list[str] | None = None, container: Container | None = None, entr
         if criado_aqui and c is not None:
             c.fechar()
 
+def gerar_relatorio_acessos(
+    container: Container,
+    args: argparse.Namespace,
+) -> int:
+    if args.formato == "html":
+        relatorio = HtmlAccessReport()
+    elif args.formato == "pdf":
+        relatorio = PdfAccessReport()
+    else:
+        raise ValueError(
+            f"Formato inválido: {args.formato}"
+        )
+
+    conteudo = container.relatorios_acesso.gerar(
+        relatorio
+    )
+
+    with open(args.saida, "wb") as arquivo:
+        arquivo.write(conteudo)
+
+    print(
+        f"Relatório {args.formato.upper()} "
+        f"salvo em {args.saida}."
+    )
+
+    return COD_OK
+
 
 def _despachar(args, c: Container, entrada) -> int:
     if args.cmd == "usuarios":
@@ -337,6 +367,10 @@ def _despachar(args, c: Container, entrada) -> int:
         executar_tui(c)
         return COD_OK
 
+    
+    if args.cmd == "relatorio-acessos":
+        return gerar_relatorio_acessos(c, args)
+    
     return COD_ERRO
 
 

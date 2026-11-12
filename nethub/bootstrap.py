@@ -4,10 +4,12 @@ from __future__ import annotations
 import os
 import sqlite3
 import logging
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from weakref import finalize
 
+from nethub.application.access_report import UserAccessReportService
 from .application.action_executor import ActionExecutor
 from .application.action_registry import (
     ActionRegistry,
@@ -31,7 +33,6 @@ from .domain.ports import (
     LocalNetworkDetectorPort,
     NetworkScannerPort,
     RemoteExecutorPort,
-    UserAccessRepository,
 )
 from .infrastructure.local_network_detector import LinuxLocalNetworkDetector
 from .infrastructure.nmap_adapter import NmapAdapter
@@ -156,6 +157,6 @@ def criar_container(
         facade_scope=facade_scope,
         facade=facade,
         rede_local=rede_local,
-        relatorios_acesso: UserAccessReportService
     )
+
 

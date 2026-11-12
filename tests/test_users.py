@@ -66,6 +66,17 @@ class TestUserService(unittest.TestCase):
             self.logger,
         )
 
+    def test_cadastra_e_lista_sem_duplicar(self):
+        cadastrado = self.servico.cadastrar("ana", SENHA)
+
+        self.assertEqual(
+            [cadastrado.login],
+            [usuario.login for usuario in self.servico.listar()],
+        )
+
+        with self.assertRaises(UsuarioDuplicado):
+            self.servico.cadastrar("ana", SENHA)
+
 
 
 class TestSqliteUserRepository(unittest.TestCase):
@@ -251,7 +262,6 @@ class TestTelaUsuarios(unittest.TestCase):
         terminal = Terminal(tela)
         self.assertEqual(terminal.pedir_texto("Senha: ", ocultar=True), SENHA)
         self.assertNotIn(SENHA, "".join(tela.textos))
-
 
 if __name__ == "__main__":
     unittest.main()
