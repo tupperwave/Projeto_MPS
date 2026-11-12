@@ -19,6 +19,7 @@ Repositório da equipe para a disciplina Métodos e Projeto de Software. A docum
 - [Interface](docs/06-interface/)
 - [Arquitetura e ADRs](docs/07-arquitetura/)
 - [Projeto](docs/08-projeto.md)
+- [Documento do projeto — versão 2](docs/09-documento-projeto-v2.md)
 - [Requisitos vigentes](openspec/specs/)
 - [Histórico e notas da Sprint 3](docs/releases/sprint-3.md)
 

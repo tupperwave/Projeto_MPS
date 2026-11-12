@@ -22,6 +22,10 @@
 
 Fonte PlantUML: [diagrama-usuarios.puml](diagrama-usuarios.puml). Ela apresenta os atores Administrador e Operador autorizado e os casos de uso UC10, UC11 e RF17.
 
+## Diagrama geral — versão 2 do documento
+
+O [diagrama-casos-de-uso-v2.puml](diagrama-casos-de-uso-v2.puml) reúne os requisitos funcionais documentados para o produto e as mudanças da Sprint 3. A análise de cobertura, incluindo referências de requisitos sem especificação correspondente, está no [Documento do Projeto — Versão 2](../09-documento-projeto-v2.md).
+
 ## Visão funcional — gerenciamento de usuários
 
 ```mermaid

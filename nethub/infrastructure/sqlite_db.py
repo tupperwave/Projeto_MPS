@@ -56,7 +56,24 @@ _MIGRACOES = [
     );
     CREATE INDEX idx_anotacoes_hosts_host_ip ON anotacoes_hosts(host_ip);
     """,
+
+    # versão 4: histórico de acessos
+    """
+    CREATE TABLE acessos_usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        login TEXT NOT NULL,
+        ocorrido_em TEXT NOT NULL,
+        sucesso INTEGER NOT NULL CHECK (sucesso IN (0, 1))
+    );
+
+    CREATE INDEX idx_acessos_usuarios_login
+        ON acessos_usuarios(login);
+
+    CREATE INDEX idx_acessos_usuarios_ocorrido_em
+        ON acessos_usuarios(ocorrido_em);
+    """,
 ]
+
 
 
 class SqliteDatabase:

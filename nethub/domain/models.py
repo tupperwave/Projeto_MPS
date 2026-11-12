@@ -212,3 +212,17 @@ class Evidencia:
 
     def integra(self) -> bool:
         return self.hash_integridade == self.calcular_hash()
+
+@dataclass(frozen=True)
+class AcessoUsuario:
+        login: str
+        ocorrido_em: datetime
+        sucesso: bool
+
+@dataclass(frozen=True)
+class EstatisticaAcesso:
+    login: str
+    total: int
+    sucessos: int
+    falhas: int
+    ultimo_acesso: datetime | None

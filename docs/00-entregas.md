@@ -45,7 +45,11 @@ Use esta página como checklist de acompanhamento. As datas e os critérios espe
 
 ## Pendências gerais do repositório
 
+- [x] Consolidar a Versão 2 do documento do projeto, com revisões, três casos de uso, diagrama geral, modelo de classes até Sprint 3 e avaliação de implementação ([documento](09-documento-projeto-v2.md)).
+- [ ] Reconciliar RF20–RF28 citados em UC12–UC14 e decidir se o requisito de CRUD integral se aplica também a `Usuario`.
+
 - [ ] Confirmar escopo e nomenclatura final do produto.
 - [ ] Revisar cenários e critérios mensuráveis dos demais requisitos não funcionais.
-- [ ] Completar o diagrama geral de casos de uso e os diagramas de interface e arquitetura.
+- [x] Criar diagrama geral de casos de uso cobrindo os requisitos funcionais definidos ([versão 2](04-casos-de-uso/diagrama-casos-de-uso-v2.puml)).
+- [ ] Completar os diagramas de interface e arquitetura.
 - [ ] Completar os modelos gerais de classes de análise e projeto e registrar decisões de arquitetura.

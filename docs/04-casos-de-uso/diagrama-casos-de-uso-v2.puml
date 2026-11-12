@@ -1,0 +1,80 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Administrador / operador" as Operador
+actor "Cliente interno" as Cliente
+
+rectangle "NetHub" {
+  package "Descoberta e inventário" {
+    usecase "UC01 — Descobrir dispositivos\nRF01" as UC01
+    usecase "Consultar host e capacidades\nUC02 / RF02 / RF03" as UC02
+    usecase "Gerenciar hosts\nUC12 / UC13 / RF18 / RF19" as Hosts
+  }
+  package "Operações" {
+    usecase "Executar comando remoto\nUC03 / RF04 / RF05" as UC03
+    usecase "Consultar saúde\nUC04 / RF11" as UC04
+    usecase "Gerenciar serviços\nUC05 / RF12" as UC05
+    usecase "Transferir arquivos\nUC06 / RF13" as UC06
+    usecase "Simular workflow\nUC07 / RF07" as UC07
+    usecase "Validar resultado pós-ação\nRF08" as RF08
+    usecase "Registrar evidências\nRF09" as RF09
+    usecase "Consultar histórico\nUC08 / RF14" as UC08
+    usecase "Organizar hosts com tags\nUC09 / RF15" as UC09
+  }
+  package "Usuários e interface" {
+    usecase "Oferecer interface de terminal\nRF10" as RF10
+    usecase "Cadastrar usuário\nUC10 / RF06" as UC10
+    usecase "Listar usuários\nUC11 / RF16" as UC11
+    usecase "Selecionar persistência\nRF17" as RF17
+  }
+  package "Anotações e gerentes — Sprint 3" {
+    usecase "Manter anotações de host\nUC15 / RF29" as RF29
+    usecase "Acessar gerentes pela fachada\nUC15 / RF30" as RF30
+    usecase "Consultar quantidade total\nUC14 (referências RF27–RF28 pendentes)" as UC14
+    usecase "Contar entidades cadastradas\nUC15 / RF31" as RF31
+    usecase "Disponibilizar CRUD pela CLI\nRF32" as RF32
+  }
+}
+
+Operador -- UC01
+Operador -- UC02
+Operador -- Hosts
+Operador -- UC03
+Operador -- UC04
+Operador -- UC05
+Operador -- UC06
+Operador -- UC07
+Operador -- UC08
+Operador -- UC09
+Operador -- UC10
+Operador -- UC11
+Operador -- RF10
+Operador -- RF17
+Operador -- RF29
+Operador -- RF32
+Cliente -- RF30
+Cliente -- RF31
+Operador -- UC14
+UC14 ..> RF31 : requisito atual da Sprint 3
+
+UC03 ..> RF08 : valida quando aplicável
+UC03 ..> RF09 : registra tentativa
+UC04 ..> RF09 : registra resultado
+UC05 ..> RF08 : verifica estado
+UC05 ..> RF09 : registra resultado
+UC06 ..> RF08 : verifica integridade
+UC06 ..> RF09 : registra resultado
+UC07 ..> RF04 : aplica risco
+UC07 ..> RF09 : registra execução
+UC08 ..> RF09 : consulta registros
+UC10 ..> RF17 : usa modo selecionado
+UC11 ..> RF17 : usa modo selecionado
+RF29 ..> RF32 : exposto pela CLI
+
+note bottom of Hosts
+  RF18 e RF19 vêm do documento-fonte preservado.
+  A associação de responsável é descrita em UC12;
+  RF20–RF28 precisam de reconciliação documental.
+end note
+@enduml
