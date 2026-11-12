@@ -8,26 +8,33 @@ from pathlib import Path
 from weakref import finalize
 
 from .application.action_executor import ActionExecutor
-from .application.action_registry import ActionRegistry, ContextMenuService, registro_padrao
+from .application.action_registry import (
+    ActionRegistry,
+    ContextMenuService,
+    registro_padrao,
+)
+from .application.annotation_service import HostAnnotationService
 from .application.capability_detector import CapabilityDetector
 from .application.discovery_service import DiscoveryService
-from .application.evidence_service import EvidenceService, HistoryService
-from .application.inventory_service import InventoryService
-from .application.annotation_service import HostAnnotationService
 from .application.entity_count_service import EntityCountService
+from .application.evidence_service import EvidenceService, HistoryService
 from .application.facade_controller import (
-    FacadeSingletonController, FacadeSingletonScope, GerentesController,
+    FacadeSingletonController,
+    FacadeSingletonScope,
+    GerentesController,
 )
+from .application.inventory_service import InventoryService
 from .application.user_service import UserService
 from .domain.errors import FalhaBancoDados
-from .domain.ports import LocalNetworkDetectorPort, NetworkScannerPort, RemoteExecutorPort
+from .domain.ports import (
+    LocalNetworkDetectorPort,
+    NetworkScannerPort,
+    RemoteExecutorPort,
+)
 from .infrastructure.local_network_detector import LinuxLocalNetworkDetector
 from .infrastructure.nmap_adapter import NmapAdapter
-from .infrastructure.memory_user_repository import MemoryUserRepository
+from .infrastructure.repository_factory import RepositoryFactory
 from .infrastructure.sqlite_db import SqliteDatabase
-from .infrastructure.sqlite_repositories import (
-    SqliteEvidenceRepository, SqliteHostAnnotationRepository, SqliteHostRepository, SqliteUserRepository,
-)
 from .infrastructure.ssh_adapter import SshExecutor
 
 
@@ -70,33 +77,58 @@ def criar_container(
     remoto: RemoteExecutorPort | None = None,
     persistencia_usuarios: str = "memoria",
 ) -> Container:
+    # Infraestrutura e repositórios
     try:
         banco = SqliteDatabase(caminho_db or caminho_padrao_db())
     except (OSError, sqlite3.Error) as exc:
-        raise FalhaBancoDados("Não foi possível abrir ou inicializar o banco SQLite.") from exc
-    repo_hosts = SqliteHostRepository(banco)
-    repo_evid = SqliteEvidenceRepository(banco)
-    evidencias = EvidenceService(repo_evid)
-    inventario = InventoryService(repo_hosts, CapabilityDetector())
+        raise FalhaBancoDados(
+            "Não foi possível abrir ou inicializar o banco SQLite."
+        ) from exc
+
+    repositorios = RepositoryFactory(
+        banco,
+        persistencia_usuarios=persistencia_usuarios,
+    ).criar()
+    rede_local = LinuxLocalNetworkDetector()
     registro = registro_padrao()
-    if persistencia_usuarios == "memoria":
-        repo_usuarios = MemoryUserRepository()
-    elif persistencia_usuarios == "sqlite":
-        repo_usuarios = SqliteUserRepository(banco)
-    else:
-        raise ValueError("Persistência de usuários deve ser 'memoria' ou 'sqlite'.")
-    usuarios = UserService(repo_usuarios)
-    repo_anotacoes = SqliteHostAnnotationRepository(banco)
-    anotacoes = HostAnnotationService(repo_anotacoes, repo_hosts)
+
+    # Serviços de aplicação
+    evidencias = EvidenceService(repositorios.evidencias)
+    historico = HistoryService(repositorios.evidencias)
+    inventario = InventoryService(repositorios.hosts, CapabilityDetector())
     descoberta = DiscoveryService(scanner or NmapAdapter(), inventario, evidencias)
     menu = ContextMenuService(registro)
-    executor = ActionExecutor(remoto or SshExecutor(usuario=usuario, identidade=identidade), evidencias)
-    historico = HistoryService(repo_evid)
-    gerentes = GerentesController(inventario, descoberta, menu, executor, evidencias, historico, usuarios, anotacoes)
-    contador_entidades = EntityCountService((repo_hosts, repo_usuarios, repo_anotacoes))
+    executor = ActionExecutor(
+        remoto or SshExecutor(usuario=usuario, identidade=identidade),
+        evidencias,
+    )
+    usuarios = UserService(
+        repositorios.usuarios,
+        repositorios.acessos,
+)   
+    anotacoes = HostAnnotationService(repositorios.anotacoes, repositorios.hosts)
+    contador_entidades = EntityCountService(
+        (
+            repositorios.hosts,
+            repositorios.usuarios,
+            repositorios.anotacoes,
+        )
+    )
+
+    # Controladores e fachada
+    gerentes = GerentesController(
+        inventario,
+        descoberta,
+        menu,
+        executor,
+        evidencias,
+        historico,
+        usuarios,
+        anotacoes,
+    )
     facade_scope = FacadeSingletonScope()
     facade = FacadeSingletonController(facade_scope, gerentes, contador_entidades)
-    rede_local = LinuxLocalNetworkDetector()
+
     return Container(
         banco=banco,
         registro=registro,

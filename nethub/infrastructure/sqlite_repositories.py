@@ -12,9 +12,9 @@ from ..domain.enums import (
 from ..domain.errors import FalhaPersistenciaUsuarios, UsuarioDuplicado
 from ..domain.annotations import AnotacaoHost
 from ..domain.models import (
-    Capacidade, Evidencia, FiltroHistorico, Host, PortaServico, de_iso, para_iso,
+    Capacidade, Evidencia, FiltroHistorico, Host, PortaServico, de_iso, para_iso,AcessoUsuario, EstatisticaAcesso
 )
-from ..domain.ports import EvidenceRepository, HostRepository, HostAnnotationRepository, UserRepository
+from ..domain.ports import EvidenceRepository, HostRepository, HostAnnotationRepository, UserRepository, UserAccessRepository
 from ..domain.users import Usuario
 from .sqlite_db import SqliteDatabase
 
@@ -254,3 +254,66 @@ class SqliteHostAnnotationRepository(HostAnnotationRepository):
             id=linha["id"], host_ip=linha["host_ip"], conteudo=linha["conteudo"],
             criada_em=de_iso(linha["criada_em"]), atualizada_em=de_iso(linha["atualizada_em"]),
         )
+
+class SqliteUserAccessRepository(UserAccessRepository):
+    """Persiste acessos e calcula estatísticas dos usuários."""
+
+    def __init__(self, banco: SqliteDatabase) -> None:
+        self._db = banco
+
+    def registrar(self, acesso: AcessoUsuario) -> AcessoUsuario:
+        self._db.executar(
+            """
+            INSERT INTO acessos_usuarios (
+                login,
+                ocorrido_em,
+                sucesso
+            )
+            VALUES (?, ?, ?)
+            """,
+            (
+                acesso.login,
+                para_iso(acesso.ocorrido_em),
+                int(acesso.sucesso),
+            ),
+        )
+        return acesso
+
+    def estatisticas(self) -> list[EstatisticaAcesso]:
+        linhas = self._db.consultar(
+            """
+            SELECT
+                login,
+                COUNT(*) AS total,
+                SUM(
+                    CASE WHEN sucesso = 1 THEN 1 ELSE 0 END
+                ) AS sucessos,
+                SUM(
+                    CASE WHEN sucesso = 0 THEN 1 ELSE 0 END
+                ) AS falhas,
+                MAX(ocorrido_em) AS ultimo_acesso
+            FROM acessos_usuarios
+            GROUP BY login
+            ORDER BY login
+            """
+        )
+
+        return [
+            EstatisticaAcesso(
+                login=linha["login"],
+                total=linha["total"],
+                sucessos=linha["sucessos"],
+                falhas=linha["falhas"],
+                ultimo_acesso=(
+                    de_iso(linha["ultimo_acesso"])
+                    if linha["ultimo_acesso"]
+                    else None
+                ),
+            )
+            for linha in linhas
+        ]
+
+    def contar(self) -> int:
+        return self._db.consultar(
+            "SELECT COUNT(*) AS total FROM acessos_usuarios"
+        )[0]["total"]
