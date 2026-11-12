@@ -43,3 +43,10 @@ class UserService:
         )
 
         return persistido
+
+    def autenticar(self, login: str, senha: str) -> bool:
+        """Autentica o usuário e registra a tentativa de acesso."""
+        usuario = self._repositorio.buscar_por_login(login)
+        sucesso = usuario is not None and usuario.senha == senha
+        self.registrar_acesso(login, sucesso)
+        return sucesso

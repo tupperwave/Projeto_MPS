@@ -150,6 +150,21 @@ def _parser() -> argparse.ArgumentParser:
     cadastrar.add_argument("login")
     usuarios_sub.add_parser("listar", help="lista usuários cadastrados")
 
+    relatorio = sub.add_parser(
+        "relatorio-acessos",
+        help="gera estatísticas de acesso dos usuários",
+    )
+    relatorio.add_argument(
+        "--formato",
+        choices=("html", "pdf"),
+        required=True,
+    )
+    relatorio.add_argument(
+        "--saida",
+        required=True,
+        help="arquivo de saída",
+    )
+
     anotacoes = sub.add_parser("anotacoes", help="gerencia anotações vinculadas a hosts")
     anotacoes_sub = anotacoes.add_subparsers(dest="anotacoes_cmd", required=True)
     criar_anotacao = anotacoes_sub.add_parser("criar", help="cria uma anotação para um host existente")
@@ -169,6 +184,8 @@ def _parser() -> argparse.ArgumentParser:
     t.add_argument("operacao", choices=["add", "rm"])
     t.add_argument("ip")
     t.add_argument("nome")
+
+
 
     tui = sub.add_parser("tui", help="abre a interface de terminal interativa")
     tui.add_argument("--usuario")

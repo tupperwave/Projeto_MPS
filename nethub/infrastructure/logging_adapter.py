@@ -27,14 +27,3 @@ class PythonLoggingAdapter(LoggerPort):
         )
         self._logger.info("%s%s", mensagem, f" {contexto}" if contexto else "")
 
-    def registrar_tentativa_autenticacao(
-        self,
-        usuario: str,
-        sucesso: bool,
-    ) -> None:
-        """Registra uma tentativa de autenticação sem expor ``logging`` ao negócio."""
-        self.info(
-            "Tentativa de autenticação",
-            usuario=usuario,
-            sucesso=sucesso,
-        )

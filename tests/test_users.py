@@ -5,6 +5,10 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
+from nethub.domain.ports import LoggerPort
+import logging
+from unittest.mock import Mock
+from nethub.infrastructure.logging_adapter import PythonLoggingAdapter
 
 from nethub.application.user_service import UserService
 from nethub.bootstrap import criar_container
@@ -55,12 +59,13 @@ class TestUserService(unittest.TestCase):
         banco = SqliteDatabase(":memory:")
         self.addCleanup(banco.fechar)
 
+        self.logger = FakeLogger()
         self.servico = UserService(
             MemoryUserRepository(),
             SqliteUserAccessRepository(banco),
+            self.logger,
         )
 
-        
 
 
 class TestSqliteUserRepository(unittest.TestCase):
@@ -173,6 +178,24 @@ class TestCliUsuarios(unittest.TestCase):
                     self.assertEqual("", saida)
                     self.assertIn("Erro: Não foi possível abrir ou inicializar o banco SQLite.", erro)
                     self.assertNotIn("Traceback", erro)
+
+
+class FakeLogger(LoggerPort):
+    def __init__(self) -> None:
+        self.mensagens = []
+
+    def info(self, mensagem: str, **dados: object) -> None:
+        self.mensagens.append((mensagem, dados))
+
+def test_adapter_envia_mensagem_para_logger() -> None:
+    logger = Mock(spec=logging.Logger)
+    adapter = PythonLoggingAdapter(logger)
+
+    adapter.info(
+        "Tentativa de acesso registrada",
+        login="ana",
+        sucesso=True,
+    )
 
 
 class TestTelaUsuarios(unittest.TestCase):
