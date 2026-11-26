@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from threading import RLock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from weakref import WeakKeyDictionary
 
 from .entity_count_service import EntityCountService
@@ -69,3 +69,6 @@ class FacadeSingletonController:
 
     def quantidade_entidades_cadastradas(self) -> int:
         return self._contador.quantidade_entidades_cadastradas()
+
+    def executar_comando(self, comando: Any) -> Any:
+        return comando.execute(self.gerentes.anotacoes)
