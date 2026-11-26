@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Iterator
 
 from .enums import NivelRisco, TipoConfirmacao
-from .annotations import AnotacaoHost
+from .annotations import AnotacaoHost, MementoAnotacao
 from .models import AlvoRede, Evidencia, FiltroHistorico, Host, ResultadoExecucao, AcessoUsuario, EstatisticaAcesso
 from .users import Usuario
 
@@ -56,6 +56,19 @@ class HostAnnotationRepository(ABC):
 
     @abstractmethod
     def excluir(self, id_: int) -> bool: ...
+
+
+class AnnotationMementoRepository(ABC):
+    """Armazena somente o memento da última atualização de anotação."""
+
+    @abstractmethod
+    def salvar(self, memento: MementoAnotacao) -> None: ...
+
+    @abstractmethod
+    def obter_ultimo(self) -> MementoAnotacao | None: ...
+
+    @abstractmethod
+    def limpar(self) -> None: ...
 
 
 class EvidenceRepository(ABC):

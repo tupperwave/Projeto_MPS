@@ -7,8 +7,18 @@ from typing import TYPE_CHECKING
 from weakref import WeakKeyDictionary
 
 from .entity_count_service import EntityCountService
+from .commands import (
+    CommandInvoker,
+    CreateAnnotationCommand,
+    DeleteAnnotationCommand,
+    GetAnnotationCommand,
+    ListAnnotationsCommand,
+    UndoLastAnnotationUpdateCommand,
+    UpdateAnnotationCommand,
+)
 
 if TYPE_CHECKING:
+    from ..domain.annotations import AnotacaoHost
     from .action_executor import ActionExecutor
     from .action_registry import ContextMenuService
     from .annotation_service import HostAnnotationService
@@ -35,7 +45,7 @@ class GerentesController:
 
 
 class FacadeSingletonController:
-    """Expõe os gerentes e delega a contagem ao serviço correspondente."""
+    """Fachada dos casos de uso, única dentro de cada composição da aplicação."""
 
     _instances: WeakKeyDictionary[FacadeSingletonScope, "FacadeSingletonController"] = WeakKeyDictionary()
     _lock = RLock()
@@ -65,7 +75,38 @@ class FacadeSingletonController:
                 return
             self.gerentes = gerentes
             self._contador = contador
+            self._command_invoker = CommandInvoker()
             self._inicializada = True
 
     def quantidade_entidades_cadastradas(self) -> int:
         return self._contador.quantidade_entidades_cadastradas()
+
+    def criar_anotacao(self, host_ip: str, conteudo: str) -> AnotacaoHost:
+        return self._command_invoker.invoke(
+            CreateAnnotationCommand(self.gerentes.anotacoes, host_ip, conteudo)
+        )
+
+    def obter_anotacao(self, id_: int) -> AnotacaoHost:
+        return self._command_invoker.invoke(
+            GetAnnotationCommand(self.gerentes.anotacoes, id_)
+        )
+
+    def listar_anotacoes(self, host_ip: str | None = None) -> list[AnotacaoHost]:
+        return self._command_invoker.invoke(
+            ListAnnotationsCommand(self.gerentes.anotacoes, host_ip)
+        )
+
+    def atualizar_anotacao(self, id_: int, conteudo: str) -> AnotacaoHost:
+        return self._command_invoker.invoke(
+            UpdateAnnotationCommand(self.gerentes.anotacoes, id_, conteudo)
+        )
+
+    def excluir_anotacao(self, id_: int) -> bool:
+        return self._command_invoker.invoke(
+            DeleteAnnotationCommand(self.gerentes.anotacoes, id_)
+        )
+
+    def desfazer_ultima_atualizacao_anotacao(self) -> AnotacaoHost:
+        return self._command_invoker.invoke(
+            UndoLastAnnotationUpdateCommand(self.gerentes.anotacoes)
+        )

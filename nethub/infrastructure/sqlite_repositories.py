@@ -10,11 +10,18 @@ from ..domain.enums import (
     NivelRisco, StatusCapacidade, StatusExecucao, TipoAcao, TipoCapacidade,
 )
 from ..domain.errors import FalhaPersistenciaUsuarios, UsuarioDuplicado
-from ..domain.annotations import AnotacaoHost
+from ..domain.annotations import AnotacaoHost, MementoAnotacao
 from ..domain.models import (
     Capacidade, Evidencia, FiltroHistorico, Host, PortaServico, de_iso, para_iso,AcessoUsuario, EstatisticaAcesso
 )
-from ..domain.ports import EvidenceRepository, HostRepository, HostAnnotationRepository, UserRepository, UserAccessRepository
+from ..domain.ports import (
+    AnnotationMementoRepository,
+    EvidenceRepository,
+    HostRepository,
+    HostAnnotationRepository,
+    UserRepository,
+    UserAccessRepository,
+)
 from ..domain.users import Usuario
 from .sqlite_db import SqliteDatabase
 
@@ -312,6 +319,44 @@ class SqliteUserAccessRepository(UserAccessRepository):
             )
             for linha in linhas
         ]
+
+
+class SqliteAnnotationMementoRepository(AnnotationMementoRepository):
+    """Persiste um único snapshot para que o CLI consiga desfazer em outra execução."""
+
+    def __init__(self, banco: SqliteDatabase) -> None:
+        self._db = banco
+
+    def salvar(self, memento: MementoAnotacao) -> None:
+        self._db.executar(
+            """
+            INSERT INTO ultima_atualizacao_anotacao
+                (chave, anotacao_id, conteudo_anterior, atualizada_em_anterior)
+            VALUES (1, ?, ?, ?)
+            ON CONFLICT(chave) DO UPDATE SET
+                anotacao_id=excluded.anotacao_id,
+                conteudo_anterior=excluded.conteudo_anterior,
+                atualizada_em_anterior=excluded.atualizada_em_anterior
+            """,
+            (memento.id, memento.conteudo, para_iso(memento.atualizada_em)),
+        )
+
+    def obter_ultimo(self) -> MementoAnotacao | None:
+        linhas = self._db.consultar(
+            """SELECT anotacao_id, conteudo_anterior, atualizada_em_anterior
+               FROM ultima_atualizacao_anotacao WHERE chave = 1"""
+        )
+        if not linhas:
+            return None
+        linha = linhas[0]
+        return MementoAnotacao(
+            id=linha["anotacao_id"],
+            conteudo=linha["conteudo_anterior"],
+            atualizada_em=de_iso(linha["atualizada_em_anterior"]),
+        )
+
+    def limpar(self) -> None:
+        self._db.executar("DELETE FROM ultima_atualizacao_anotacao WHERE chave = 1")
 
     def contar(self) -> int:
         return self._db.consultar(

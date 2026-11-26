@@ -33,6 +33,10 @@ class RegistroNaoEncontrado(NetHubError):
     pass
 
 
+class SemAtualizacaoParaDesfazer(NetHubError):
+    """Ainda não há uma atualização de anotação que possa ser desfeita."""
+
+
 class AcaoIncompativel(NetHubError):
     pass
 

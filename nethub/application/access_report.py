@@ -82,6 +82,7 @@ class HtmlAccessReport(AccessReportTemplate):
         self._partes: list[str] = []
 
     def iniciar_documento(self) -> None:
+        self._partes = []
         self._partes.append(
             "<!doctype html>"
             "<html lang='pt-BR'>"

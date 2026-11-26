@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..domain.ports import (
+    AnnotationMementoRepository,
     EvidenceRepository,
     HostAnnotationRepository,
     HostRepository,
@@ -15,6 +16,7 @@ from .memory_user_repository import MemoryUserRepository
 from .sqlite_db import SqliteDatabase
 from .sqlite_repositories import (
     SqliteEvidenceRepository,
+    SqliteAnnotationMementoRepository,
     SqliteHostAnnotationRepository,
     SqliteHostRepository,
     SqliteUserRepository,
@@ -30,6 +32,7 @@ class Repositories:
     usuarios: UserRepository
     anotacoes: HostAnnotationRepository
     acessos: UserAccessRepository
+    mementos_anotacao: AnnotationMementoRepository
 
 
 class RepositoryFactory:
@@ -50,6 +53,7 @@ class RepositoryFactory:
             usuarios=self._criar_usuarios(),
             anotacoes=SqliteHostAnnotationRepository(self._banco),
             acessos=SqliteUserAccessRepository(self._banco),
+            mementos_anotacao=SqliteAnnotationMementoRepository(self._banco),
         )
 
     def _criar_usuarios(self) -> UserRepository:

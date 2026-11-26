@@ -116,6 +116,10 @@ entre:
 A aplicação recebe o objeto `Repositories` já montado e não precisa instanciar
 diretamente cada repositório.
 
+A implementação é parcial como Abstract Factory: somente o repositório de
+usuários alterna entre memória e SQLite; hosts, evidências, anotações e acessos
+continuam usando SQLite. Não há duas famílias completas de adaptadores.
+
 ### Adapter
 
 O `PythonLoggingAdapter` adapta a API de `logging.Logger` à interface

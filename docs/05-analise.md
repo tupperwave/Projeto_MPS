@@ -1,10 +1,10 @@
 # 5. Análise
 
-O modelo integrado que contempla os cadastros de usuários e anotações, a fachada e o Singleton até a Sprint 3 está consolidado também na seção 5 do [Documento do Projeto — Versão 2](09-documento-projeto-v2.md).
+O modelo integrado contempla os cadastros, a fachada e o Singleton das Sprints anteriores, além de Command e Memento introduzidos na Sprint 5. A atualização está consolidada também na seção 5 do [Documento do Projeto — Versão 2](09-documento-projeto-v2.md).
 
-## Modelo de classes atualizado — Sprint 3
+## Modelo de classes atualizado — Sprint 5
 
-O modelo abaixo inclui a entidade nova, seu vínculo com `Host`, persistência e a fachada única para os gerentes da aplicação.
+O modelo abaixo inclui a entidade `AnotacaoHost`, sua persistência, os comandos executados pela fachada e o memento da última atualização.
 
 ```mermaid
 classDiagram
@@ -74,6 +74,28 @@ classDiagram
         +listar(host_ip) List~AnotacaoHost~
         +atualizar(id, conteudo) AnotacaoHost
         +excluir(id) bool
+        +desfazer_ultima_atualizacao() AnotacaoHost
+    }
+    class Command~T~ {
+        <<interface>>
+        +execute() T
+    }
+    class CommandInvoker {
+        +invoke(command) T
+    }
+    class CreateAnnotationCommand
+    class GetAnnotationCommand
+    class ListAnnotationsCommand
+    class UpdateAnnotationCommand
+    class DeleteAnnotationCommand
+    class UndoLastAnnotationUpdateCommand
+    class AnnotationMementoRepository {
+        <<interface>>
+        +salvar(memento)
+        +obter_ultimo() MementoAnotacao
+        +limpar()
+    }
+    class SqliteAnnotationMementoRepository
     }
     class HostRepository {
         <<interface>>
@@ -106,6 +128,14 @@ classDiagram
         +criada_em: datetime
         +atualizada_em: datetime
         +atualizar(conteudo) void
+        +criar_memento() MementoAnotacao
+        +restaurar(memento) void
+    }
+    class MementoAnotacao {
+        <<immutable snapshot>>
+        +id: int
+        +conteudo: str
+        +atualizada_em: datetime
     }
 
     Container --> FacadeSingletonScope : possui
@@ -117,6 +147,20 @@ classDiagram
     FacadeSingletonScope ..> FacadeSingletonController : singleton por composição
     FacadeSingletonController --> GerentesController
     FacadeSingletonController --> EntityCountService : delega contagem
+    FacadeSingletonController --> CommandInvoker : executa
+    CommandInvoker --> Command : recebe
+    Command <|.. CreateAnnotationCommand
+    Command <|.. GetAnnotationCommand
+    Command <|.. ListAnnotationsCommand
+    Command <|.. UpdateAnnotationCommand
+    Command <|.. DeleteAnnotationCommand
+    Command <|.. UndoLastAnnotationUpdateCommand
+    CreateAnnotationCommand --> HostAnnotationService
+    GetAnnotationCommand --> HostAnnotationService
+    ListAnnotationsCommand --> HostAnnotationService
+    UpdateAnnotationCommand --> HostAnnotationService
+    DeleteAnnotationCommand --> HostAnnotationService
+    UndoLastAnnotationUpdateCommand --> HostAnnotationService
     GerentesController --> InventoryService
     GerentesController --> UserService
     GerentesController --> HostAnnotationService
@@ -124,6 +168,10 @@ classDiagram
     UserService --> Usuario
     HostAnnotationService --> HostAnnotationRepository
     HostAnnotationService --> HostRepository : valida host
+    HostAnnotationService --> AnnotationMementoRepository : guarda último estado
+    AnotacaoHost ..> MementoAnotacao : cria / restaura
+    SqliteAnnotationMementoRepository ..|> AnnotationMementoRepository
+    SqliteAnnotationMementoRepository --> MementoAnotacao : persiste snapshot único
     SqliteHostRepository ..|> HostRepository
     SqliteHostAnnotationRepository ..|> HostAnnotationRepository
     SqliteHostRepository ..|> EntityCountSource
@@ -135,9 +183,9 @@ classDiagram
     HostAnnotationRepository --> AnotacaoHost
 ```
 
-`quantidade_entidades_cadastradas()` delega ao serviço de contagem, que agrega consultas `COUNT(*)` ou contagens em memória. As fontes de contagem são uma capacidade segregada das portas CRUD. A fachada é singleton por composição, com cache fraca para não reter aplicações encerradas.
+`quantidade_entidades_cadastradas()` delega ao serviço de contagem, que agrega consultas `COUNT(*)` ou contagens em memória. As fontes de contagem são uma capacidade segregada das portas CRUD. A fachada é singleton por composição, com cache fraca para não reter aplicações encerradas. A fachada executa os pedidos de anotações pelo `CommandInvoker`; o serviço salva um único memento no SQLite, substituído por cada atualização válida e removido depois de um desfazer bem-sucedido.
 
-No mesmo modelo BCE, `CliAnotacoes` é a fronteira, `HostAnnotationService` é o controle e `AnotacaoHost` é o modelo de domínio. A CLI encaminha o CRUD pela fachada única dos gerentes.
+No mesmo modelo BCE, `CliAnotacoes` é a fronteira, `HostAnnotationService` é o controle e `AnotacaoHost` é o modelo de domínio. A CLI encaminha o CRUD e o desfazer pela fachada única dos gerentes.
 
 ## Diagrama de classes
 

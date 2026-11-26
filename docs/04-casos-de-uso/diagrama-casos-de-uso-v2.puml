@@ -35,6 +35,9 @@ rectangle "NetHub" {
     usecase "Contar entidades cadastradas\nUC15 / RF31" as RF31
     usecase "Disponibilizar CRUD pela CLI\nRF32" as RF32
   }
+  package "Acessos e relatórios — Sprint 4" {
+    usecase "Consultar tentativas e exportar relatório\nUC16 / RF33" as UC16
+  }
 }
 
 Operador -- UC01
@@ -53,6 +56,7 @@ Operador -- RF10
 Operador -- RF17
 Operador -- RF29
 Operador -- RF32
+Operador -- UC16
 Cliente -- RF30
 Cliente -- RF31
 Operador -- UC14
