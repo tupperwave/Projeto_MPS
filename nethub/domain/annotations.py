@@ -7,6 +7,15 @@ from datetime import datetime
 from .models import agora
 
 
+@dataclass(frozen=True)
+class MementoAnotacao:
+    """Snapshot privado usado para restaurar a última atualização."""
+
+    id: int
+    conteudo: str
+    atualizada_em: datetime
+
+
 @dataclass
 class AnotacaoHost:
     host_ip: str
@@ -29,3 +38,14 @@ class AnotacaoHost:
             raise ValueError("O conteúdo da anotação é obrigatório.")
         self.conteudo = conteudo
         self.atualizada_em = agora()
+
+    def criar_memento(self) -> MementoAnotacao:
+        if self.id is None:
+            raise ValueError("Uma anotação precisa estar salva para criar um memento.")
+        return MementoAnotacao(self.id, self.conteudo, self.atualizada_em)
+
+    def restaurar(self, memento: MementoAnotacao) -> None:
+        if self.id != memento.id:
+            raise ValueError("O memento pertence a outra anotação.")
+        self.conteudo = memento.conteudo
+        self.atualizada_em = memento.atualizada_em

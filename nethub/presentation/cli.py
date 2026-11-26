@@ -53,7 +53,7 @@ class CliAnotacoes:
     """Fronteira CLI para o CRUD de anotações, usando a fachada dos gerentes."""
 
     def __init__(self, facade: FacadeSingletonController) -> None:
-        self._anotacoes = facade.gerentes.anotacoes
+        self._facade = facade
 
     def despachar(self, args: argparse.Namespace) -> int:
         if args.anotacoes_cmd == "criar":
@@ -71,19 +71,22 @@ class CliAnotacoes:
         if args.anotacoes_cmd == "excluir":
             return self.excluir(args.id)
 
+        if args.anotacoes_cmd == "desfazer":
+            return self.desfazer_ultima_atualizacao()
+
         return COD_ERRO
 
     def criar(self, host_ip: str, conteudo: str) -> int:
-        anotacao = self._anotacoes.criar(host_ip, conteudo)
+        anotacao = self._facade.criar_anotacao(host_ip, conteudo)
         print(f"Anotação #{anotacao.id} criada para {anotacao.host_ip}.")
         return COD_OK
 
     def obter(self, id_: int) -> int:
-        print(self._linha(self._anotacoes.obter(id_)))
+        print(self._linha(self._facade.obter_anotacao(id_)))
         return COD_OK
 
     def listar(self, host_ip: str | None = None) -> int:
-        anotacoes = self._anotacoes.listar(host_ip)
+        anotacoes = self._facade.listar_anotacoes(host_ip)
         if not anotacoes:
             print("Nenhuma anotação encontrada.")
             return COD_OK
@@ -91,14 +94,19 @@ class CliAnotacoes:
         return COD_OK
 
     def atualizar(self, id_: int, conteudo: str) -> int:
-        anotacao = self._anotacoes.atualizar(id_, conteudo)
+        anotacao = self._facade.atualizar_anotacao(id_, conteudo)
         print(f"Anotação #{anotacao.id} atualizada.")
         return COD_OK
 
     def excluir(self, id_: int) -> int:
-        if not self._anotacoes.excluir(id_):
+        if not self._facade.excluir_anotacao(id_):
             raise RegistroNaoEncontrado(f"Anotação #{id_} não encontrada.")
         print(f"Anotação #{id_} excluída.")
+        return COD_OK
+
+    def desfazer_ultima_atualizacao(self) -> int:
+        anotacao = self._facade.desfazer_ultima_atualizacao_anotacao()
+        print(f"Última atualização desfeita: {self._linha(anotacao)}")
         return COD_OK
 
     @staticmethod
@@ -182,6 +190,10 @@ def _parser() -> argparse.ArgumentParser:
     atualizar_anotacao.add_argument("conteudo")
     excluir_anotacao = anotacoes_sub.add_parser("excluir", help="exclui uma anotação pelo identificador")
     excluir_anotacao.add_argument("id", type=int)
+    anotacoes_sub.add_parser(
+        "desfazer",
+        help="desfaz a última atualização de anotação ainda disponível",
+    )
 
     t = sub.add_parser("tag", help="organiza hosts com tags (UC-09)")
     t.add_argument("operacao", choices=["add", "rm"])

@@ -40,7 +40,7 @@ Para habilitar o comando `nethub` no shell, instale o projeto na raiz do reposit
 
 Use `--persistencia-usuarios memoria` para manter os cadastros apenas durante a execução. Sem a opção, a CLI usa memória.
 
-## Gerenciar anotações de hosts — Sprint 3
+## Gerenciar anotações de hosts — Sprints 3 e 5
 
 As anotações ficam associadas a um host já cadastrado no inventário e são persistidas no SQLite. Primeiro, descubra o host em uma rede para a qual você tenha autorização. A descoberta usa o Nmap; no Fedora, instale-o com `sudo dnf install nmap`.
 
@@ -55,10 +55,11 @@ python3 -m nethub anotacoes criar 192.168.0.10 "Servidor de arquivos"
 python3 -m nethub anotacoes listar --host 192.168.0.10
 python3 -m nethub anotacoes obter 1
 python3 -m nethub anotacoes atualizar 1 "Servidor de arquivos — rack 2"
+python3 -m nethub anotacoes desfazer
 python3 -m nethub anotacoes excluir 1
 ```
 
-Os identificadores são retornados ao criar e ao listar anotações. O CRUD é encaminhado pela `FacadeSingletonController`, cuja contagem soma hosts, usuários e anotações cadastrados. Por padrão, as anotações são salvas no banco SQLite do usuário; para selecionar outro arquivo, passe `--db CAMINHO` antes do subcomando, por exemplo: `python3 -m nethub --db ./nethub.db anotacoes listar`.
+Os identificadores são retornados ao criar e ao listar anotações. O CRUD é encaminhado por comandos executados pela `FacadeSingletonController`, cuja contagem soma hosts, usuários e anotações cadastrados. `anotacoes desfazer` restaura uma única vez o estado anterior à atualização mais recente; o snapshot é mantido no SQLite selecionado para permitir desfazer em uma execução separada da CLI. Por padrão, as anotações são salvas no banco SQLite do usuário; para selecionar outro arquivo, passe `--db CAMINHO` antes do subcomando, por exemplo: `python3 -m nethub --db ./nethub.db anotacoes listar`.
 
 ## Descobrir hosts
 

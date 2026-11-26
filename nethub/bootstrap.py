@@ -117,7 +117,11 @@ def criar_container(
         repositorios.acessos,
         logger,
     )
-    anotacoes = HostAnnotationService(repositorios.anotacoes, repositorios.hosts)
+    anotacoes = HostAnnotationService(
+        repositorios.anotacoes,
+        repositorios.hosts,
+        repositorios.mementos_anotacao,
+    )
     contador_entidades = EntityCountService(
         (
             repositorios.hosts,
