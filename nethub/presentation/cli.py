@@ -11,6 +11,7 @@ from ..application.facade_controller import FacadeSingletonController
 from ..application.commands import (
     AtualizarAnotacaoCommand,
     CriarAnotacaoCommand,
+    DesfazerAtualizacaoAnotacaoCommand,
     ExcluirAnotacaoCommand,
     ListarAnotacoesCommand,
     ObterAnotacaoCommand,
@@ -78,6 +79,9 @@ class CliAnotacoes:
         if args.anotacoes_cmd == "excluir":
             return self.excluir(args.id)
 
+        if args.anotacoes_cmd == "desfazer":
+            return self.desfazer()
+
         return COD_ERRO
 
     def criar(self, host_ip: str, conteudo: str) -> int:
@@ -113,6 +117,11 @@ class CliAnotacoes:
         if not self._facade.executar_comando(ExcluirAnotacaoCommand(id_)):
             raise RegistroNaoEncontrado(f"Anotação #{id_} não encontrada.")
         print(f"Anotação #{id_} excluída.")
+        return COD_OK
+
+    def desfazer(self) -> int:
+        self._facade.executar_comando(DesfazerAtualizacaoAnotacaoCommand())
+        print("Última atualização desfeita.")
         return COD_OK
 
     @staticmethod
@@ -196,6 +205,7 @@ def _parser() -> argparse.ArgumentParser:
     atualizar_anotacao.add_argument("conteudo")
     excluir_anotacao = anotacoes_sub.add_parser("excluir", help="exclui uma anotação pelo identificador")
     excluir_anotacao.add_argument("id", type=int)
+    anotacoes_sub.add_parser("desfazer", help="desfaz a última atualização de anotação")
 
     t = sub.add_parser("tag", help="organiza hosts com tags (UC-09)")
     t.add_argument("operacao", choices=["add", "rm"])

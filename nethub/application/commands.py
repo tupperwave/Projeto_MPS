@@ -43,6 +43,12 @@ class AtualizarAnotacaoCommand(ComandoAnotacao):
 
 
 @dataclass(frozen=True)
+class DesfazerAtualizacaoAnotacaoCommand(ComandoAnotacao):
+	def execute(self, servico):
+		return servico.desfazer_ultima_atualizacao()
+
+
+@dataclass(frozen=True)
 class ExcluirAnotacaoCommand(ComandoAnotacao):
 	id_anotacao: int
 
