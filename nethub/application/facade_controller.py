@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from threading import RLock
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from weakref import WeakKeyDictionary
 
 from .entity_count_service import EntityCountService
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .action_executor import ActionExecutor
     from .action_registry import ContextMenuService
     from .annotation_service import HostAnnotationService
+    from .commands import Comando
     from .discovery_service import DiscoveryService
     from .evidence_service import EvidenceService, HistoryService
     from .inventory_service import InventoryService
@@ -46,6 +47,7 @@ class FacadeSingletonController:
         gerentes: GerentesController,
         contador: EntityCountService,
     ) -> "FacadeSingletonController":
+        del gerentes, contador
         with cls._lock:
             instancia = cls._instances.get(escopo)
             if instancia is None:
@@ -70,5 +72,5 @@ class FacadeSingletonController:
     def quantidade_entidades_cadastradas(self) -> int:
         return self._contador.quantidade_entidades_cadastradas()
 
-    def executar_comando(self, comando: Any) -> Any:
+    def executar_comando(self, comando: Comando) -> object:
         return comando.execute(self.gerentes.anotacoes)

@@ -8,6 +8,13 @@ import sys
 from datetime import datetime, time as hora
 
 from ..application.facade_controller import FacadeSingletonController
+from ..application.commands import (
+    AtualizarAnotacaoCommand,
+    CriarAnotacaoCommand,
+    ExcluirAnotacaoCommand,
+    ListarAnotacoesCommand,
+    ObterAnotacaoCommand,
+)
 from ..bootstrap import Container, criar_container
 from ..domain.actions import ExecutarComandoAcao
 from ..domain.annotations import AnotacaoHost
@@ -50,10 +57,10 @@ def _imprimir(linhas: list[str]) -> None:
 
 
 class CliAnotacoes:
-    """Fronteira CLI para o CRUD de anotações, usando a fachada dos gerentes."""
+    """Fronteira CLI que encaminha comandos de anotação à fachada."""
 
     def __init__(self, facade: FacadeSingletonController) -> None:
-        self._anotacoes = facade.gerentes.anotacoes
+        self._facade = facade
 
     def despachar(self, args: argparse.Namespace) -> int:
         if args.anotacoes_cmd == "criar":
@@ -74,16 +81,21 @@ class CliAnotacoes:
         return COD_ERRO
 
     def criar(self, host_ip: str, conteudo: str) -> int:
-        anotacao = self._anotacoes.criar(host_ip, conteudo)
+        anotacao = self._facade.executar_comando(
+            CriarAnotacaoCommand(host_ip, conteudo)
+        )
         print(f"Anotação #{anotacao.id} criada para {anotacao.host_ip}.")
         return COD_OK
 
     def obter(self, id_: int) -> int:
-        print(self._linha(self._anotacoes.obter(id_)))
+        anotacao = self._facade.executar_comando(ObterAnotacaoCommand(id_))
+        print(self._linha(anotacao))
         return COD_OK
 
     def listar(self, host_ip: str | None = None) -> int:
-        anotacoes = self._anotacoes.listar(host_ip)
+        anotacoes = self._facade.executar_comando(
+            ListarAnotacoesCommand(host_ip)
+        )
         if not anotacoes:
             print("Nenhuma anotação encontrada.")
             return COD_OK
@@ -91,12 +103,14 @@ class CliAnotacoes:
         return COD_OK
 
     def atualizar(self, id_: int, conteudo: str) -> int:
-        anotacao = self._anotacoes.atualizar(id_, conteudo)
+        anotacao = self._facade.executar_comando(
+            AtualizarAnotacaoCommand(id_, conteudo)
+        )
         print(f"Anotação #{anotacao.id} atualizada.")
         return COD_OK
 
     def excluir(self, id_: int) -> int:
-        if not self._anotacoes.excluir(id_):
+        if not self._facade.executar_comando(ExcluirAnotacaoCommand(id_)):
             raise RegistroNaoEncontrado(f"Anotação #{id_} não encontrada.")
         print(f"Anotação #{id_} excluída.")
         return COD_OK
