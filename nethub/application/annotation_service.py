@@ -1,13 +1,13 @@
 """Casos de uso para manter anotações de hosts."""
 from __future__ import annotations
 
-from ..domain.annotations import AnotacaoHost
-from ..domain.errors import NetHubError, RegistroNaoEncontrado
-from ..domain.ports import HostRepository, HostAnnotationRepository
-
-
-class DesfazerAtualizacaoIndisponivel(NetHubError):
-    """Indica que não há atualização que possa ser desfeita."""
+from ..domain.annotations import AnotacaoHost, MementoAnotacao
+from ..domain.errors import RegistroNaoEncontrado, SemAtualizacaoParaDesfazer
+from ..domain.ports import (
+    AnnotationMementoRepository,
+    HostRepository,
+    HostAnnotationRepository,
+)
 
 
 class HostAnnotationService:
@@ -15,11 +15,11 @@ class HostAnnotationService:
         self,
         repositorio: HostAnnotationRepository,
         hosts: HostRepository,
-        caretaker,
+        mementos: AnnotationMementoRepository,
     ) -> None:
         self._repositorio = repositorio
         self._hosts = hosts
-        self._caretaker = caretaker
+        self._mementos = mementos
 
     def criar(self, host_ip: str, conteudo: str) -> AnotacaoHost:
         if self._hosts.buscar_por_ip(host_ip) is None:
@@ -38,30 +38,46 @@ class HostAnnotationService:
     def atualizar(self, id_: int, conteudo: str) -> AnotacaoHost:
         anotacao = self.obter(id_)
         memento = anotacao.criar_memento()
+        memento_anterior = self._mementos.obter_ultimo()
         anotacao.atualizar(conteudo)
-        anotacao_salva = self._repositorio.salvar(anotacao)
-        self._caretaker.guardar(memento)
-        return anotacao_salva
+        try:
+            atualizada = self._repositorio.salvar(anotacao)
+        except Exception:
+            anotacao.restaurar(memento)
+            raise
+        try:
+            self._mementos.salvar(memento)
+        except Exception:
+            anotacao.restaurar(memento)
+            self._repositorio.salvar(anotacao)
+            if memento_anterior is None:
+                self._mementos.limpar()
+            else:
+                self._mementos.salvar(memento_anterior)
+            raise
+        return atualizada
 
     def desfazer_ultima_atualizacao(self) -> AnotacaoHost:
-        memento = self._caretaker.obter_ultimo()
+        memento = self._mementos.obter_ultimo()
         if memento is None:
-            raise DesfazerAtualizacaoIndisponivel(
-                "Não há atualização disponível para desfazer."
-            )
+            raise SemAtualizacaoParaDesfazer("Não há atualização de anotação para desfazer.")
 
-        anotacao = self._repositorio.buscar_por_id(memento.id_anotacao)
-        if anotacao is None:
-            raise DesfazerAtualizacaoIndisponivel(
-                f"A anotação #{memento.id_anotacao} foi excluída e não pode ser desfeita."
-            )
-
-        anotacao.restaurar_memento(memento)
-        anotacao_salva = self._repositorio.salvar(anotacao)
-        self._caretaker.descartar_ultimo()
-        return anotacao_salva
+        anotacao = self.obter(memento.id)
+        estado_atual = anotacao.criar_memento()
+        anotacao.restaurar(memento)
+        try:
+            restaurada = self._repositorio.salvar(anotacao)
+        except Exception:
+            anotacao.restaurar(estado_atual)
+            raise
+        self._mementos.limpar()
+        return restaurada
 
     def excluir(self, id_: int) -> bool:
         if self._repositorio.buscar_por_id(id_) is None:
             return False
-        return self._repositorio.excluir(id_)
+        excluida = self._repositorio.excluir(id_)
+        memento = self._mementos.obter_ultimo()
+        if excluida and memento is not None and memento.id == id_:
+            self._mementos.limpar()
+        return excluida

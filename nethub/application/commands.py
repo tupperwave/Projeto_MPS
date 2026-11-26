@@ -1,56 +1,78 @@
+"""Commands usados pela fachada para executar casos de uso de anotações."""
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Protocol, TypeVar
+
+from ..domain.annotations import AnotacaoHost
+from .annotation_service import HostAnnotationService
+
+T = TypeVar("T")
 
 
-class ComandoAnotacao:
-	"""Contrato comum para os comandos dos casos de uso de anotações."""
+class Command(Protocol[T]):
+    """Contrato de um pedido executável pela fachada."""
 
-	def execute(self, servico):
-		raise NotImplementedError
-
-
-@dataclass(frozen=True)
-class CriarAnotacaoCommand(ComandoAnotacao):
-	host_ip: str
-	conteudo: str
-
-	def execute(self, servico):
-		return servico.criar(self.host_ip, self.conteudo)
+    def execute(self) -> T: ...
 
 
-@dataclass(frozen=True)
-class ObterAnotacaoCommand(ComandoAnotacao):
-	id_anotacao: int
+class CommandInvoker:
+    """Executor que desacopla a fachada dos serviços chamados pelos comandos."""
 
-	def execute(self, servico):
-		return servico.obter(self.id_anotacao)
+    def invoke(self, command: Command[T]) -> T:
+        return command.execute()
 
 
 @dataclass(frozen=True)
-class ListarAnotacoesCommand(ComandoAnotacao):
-	host_ip: str | None = None
+class CreateAnnotationCommand:
+    service: HostAnnotationService
+    host_ip: str
+    content: str
 
-	def execute(self, servico):
-		return servico.listar(self.host_ip)
-
-
-@dataclass(frozen=True)
-class AtualizarAnotacaoCommand(ComandoAnotacao):
-	id_anotacao: int
-	conteudo: str
-
-	def execute(self, servico):
-		return servico.atualizar(self.id_anotacao, self.conteudo)
+    def execute(self) -> AnotacaoHost:
+        return self.service.criar(self.host_ip, self.content)
 
 
 @dataclass(frozen=True)
-class DesfazerAtualizacaoAnotacaoCommand(ComandoAnotacao):
-	def execute(self, servico):
-		return servico.desfazer_ultima_atualizacao()
+class GetAnnotationCommand:
+    service: HostAnnotationService
+    annotation_id: int
+
+    def execute(self) -> AnotacaoHost:
+        return self.service.obter(self.annotation_id)
 
 
 @dataclass(frozen=True)
-class ExcluirAnotacaoCommand(ComandoAnotacao):
-	id_anotacao: int
+class ListAnnotationsCommand:
+    service: HostAnnotationService
+    host_ip: str | None = None
 
-	def execute(self, servico):
-		return servico.excluir(self.id_anotacao)
+    def execute(self) -> list[AnotacaoHost]:
+        return self.service.listar(self.host_ip)
+
+
+@dataclass(frozen=True)
+class UpdateAnnotationCommand:
+    service: HostAnnotationService
+    annotation_id: int
+    content: str
+
+    def execute(self) -> AnotacaoHost:
+        return self.service.atualizar(self.annotation_id, self.content)
+
+
+@dataclass(frozen=True)
+class DeleteAnnotationCommand:
+    service: HostAnnotationService
+    annotation_id: int
+
+    def execute(self) -> bool:
+        return self.service.excluir(self.annotation_id)
+
+
+@dataclass(frozen=True)
+class UndoLastAnnotationUpdateCommand:
+    service: HostAnnotationService
+
+    def execute(self) -> AnotacaoHost:
+        return self.service.desfazer_ultima_atualizacao()

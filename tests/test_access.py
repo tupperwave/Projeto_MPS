@@ -1,59 +1,46 @@
-"""Tests for the project's access-control implementation."""
+"""Testes de registro e consulta das tentativas de acesso."""
+from __future__ import annotations
 
-import importlib
-import inspect
+import unittest
 
-import pytest
-
-
-def _access_callable():
-	"""Find the conventional access-check function used by the project."""
-	for module_name in ("access", "src.access", "app.access"):
-		try:
-			module = importlib.import_module(module_name)
-		except ModuleNotFoundError:
-			continue
-
-		for name in ("has_access", "can_access", "is_allowed", "check_access"):
-			candidate = getattr(module, name, None)
-			if callable(candidate):
-				return candidate
-
-	pytest.skip("No access-check implementation was found")
+from nethub.bootstrap import criar_container
+from nethub.application.access_report import PlainTextAccessReport
 
 
-def _check_access(check, user, resource, permission):
-	"""Call an access checker using its declared argument names."""
-	parameters = inspect.signature(check).parameters
-	values = {
-		"user": user,
-		"resource": resource,
-		"permission": permission,
-		"action": permission,
-	}
-	kwargs = {name: values[name] for name in parameters if name in values}
-	if len(kwargs) == len(parameters):
-		return check(**kwargs)
-	return check(user, resource, permission)
+class TestAcessoUsuario(unittest.TestCase):
+    def setUp(self) -> None:
+        self.container = criar_container(":memory:")
+        self.container.usuarios.cadastrar("Ana", "Senha123!")
+
+    def tearDown(self) -> None:
+        self.container.fechar()
+
+    def test_autenticacao_valida_registra_acesso_bem_sucedido(self) -> None:
+        self.assertTrue(self.container.usuarios.autenticar("Ana", "Senha123!"))
+
+        relatorio = self.container.relatorios_acesso.gerar(
+            PlainTextAccessReport()
+        ).decode("utf-8")
+        self.assertIn("login='Ana'", relatorio)
+        self.assertIn("total=1, sucessos=1, falhas=0", relatorio)
+
+    def test_senha_incorreta_registra_falha_sem_autenticar(self) -> None:
+        self.assertFalse(self.container.usuarios.autenticar("Ana", "Errada123!"))
+
+        relatorio = self.container.relatorios_acesso.gerar(
+            PlainTextAccessReport()
+        ).decode("utf-8")
+        self.assertIn("total=1, sucessos=0, falhas=1", relatorio)
+
+    def test_autenticacao_sem_usuario_registra_falha(self) -> None:
+        self.assertFalse(self.container.usuarios.autenticar("Bia", "Senha123!"))
+
+        relatorio = self.container.relatorios_acesso.gerar(
+            PlainTextAccessReport()
+        ).decode("utf-8")
+        self.assertIn("login='Bia'", relatorio)
+        self.assertIn("falhas=1", relatorio)
 
 
-@pytest.mark.parametrize("permission", ["read", "write", "delete"])
-def test_authenticated_user_with_permission_is_allowed(permission):
-	check = _access_callable()
-	user = {"authenticated": True, "permissions": [permission]}
-
-	assert _check_access(check, user, "document", permission) is True
-
-
-def test_unauthenticated_user_is_denied():
-	check = _access_callable()
-	user = {"authenticated": False, "permissions": ["read", "write"]}
-
-	assert _check_access(check, user, "document", "read") is False
-
-
-def test_user_without_required_permission_is_denied():
-	check = _access_callable()
-	user = {"authenticated": True, "permissions": ["read"]}
-
-	assert _check_access(check, user, "document", "delete") is False
+if __name__ == "__main__":
+    unittest.main()

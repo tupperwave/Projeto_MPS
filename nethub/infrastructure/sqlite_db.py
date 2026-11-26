@@ -72,6 +72,15 @@ _MIGRACOES = [
     CREATE INDEX idx_acessos_usuarios_ocorrido_em
         ON acessos_usuarios(ocorrido_em);
     """,
+    # versão 5: snapshot único da última atualização de anotação
+    """
+    CREATE TABLE ultima_atualizacao_anotacao (
+        chave INTEGER PRIMARY KEY CHECK (chave = 1),
+        anotacao_id INTEGER NOT NULL,
+        conteudo_anterior TEXT NOT NULL,
+        atualizada_em_anterior TEXT NOT NULL
+    );
+    """,
 ]
 
 

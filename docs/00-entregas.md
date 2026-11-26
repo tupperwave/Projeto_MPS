@@ -43,9 +43,31 @@ Use esta página como checklist de acompanhamento. As datas e os critérios espe
 - [x] Separar a sprint em três pacotes ZIP: specs e CRUD; fachada; UC15 e diagrama.
 - [x] Enviar os commits 2 e 3 para `origin/dev` e integrar a Sprint 3 à `main`.
 
+## Sprint 4 — persistência de acessos e relatórios
+
+- [x] Persistir tentativas de autenticação e produzir estatísticas por usuário.
+- [x] Gerar relatórios pelo Template Method nos formatos texto, HTML e PDF; a CLI exporta HTML ou PDF.
+- [x] Adaptar o logging da biblioteca padrão à porta `LoggerPort`.
+- **Parcial:** `RepositoryFactory` centraliza a composição, mas só os repositórios de usuários alternam entre memória e SQLite; os demais permanecem em SQLite.
+- [x] Especificar RF33 e documentar UC16, os formatos e a exportação pela CLI.
+- [x] Integrar as mudanças da Sprint 4 à `main` pelos PRs #20, #21 e #22.
+- [ ] Criar tag da Sprint 4; não há tag correspondente no repositório neste momento.
+
+## Sprint 5 — padrões Command e Memento
+
+- **Estado:** Tarefa 3.2 integrada em `main` pelo PR #24. `dev` recebeu o PR #23 com uma implementação concorrente cujo Memento fica somente em memória; esta integração adota a versão persistida em SQLite.
+- [x] Atualizar a cópia local a partir da `main`, preservando as alterações que já estavam no diretório.
+- [x] Encaminhar as operações da fachada para comandos concretos executados por um invoker.
+- [x] Implementar Memento para desfazer uma única vez a atualização mais recente de anotação.
+- [x] Expor o desfazer pela CLI e manter o snapshot no SQLite entre execuções.
+- [x] Atualizar o diagrama de classes, a especificação de anotações e os documentos de projeto.
+- [x] Adicionar testes focados em Command, Memento e persistência do último snapshot.
+- [x] Executar a suíte completa após a integração: `python3 -m unittest discover -v` (81 testes aprovados).
+- [ ] Integrar esta versão reconciliada à branch `dev` por Pull Request, após validar a suíte completa.
+
 ## Pendências gerais do repositório
 
-- [x] Consolidar a Versão 2 do documento do projeto, com revisões, três casos de uso, diagrama geral, modelo de classes até Sprint 3 e avaliação de implementação ([documento](09-documento-projeto-v2.md)).
+- [x] Consolidar a Versão 2.1 do documento do projeto, com revisões, casos de uso, diagramas e avaliação de implementação até a Sprint 5 ([documento](09-documento-projeto-v2.md)).
 - [ ] Reconciliar RF20–RF28 citados em UC12–UC14 e decidir se o requisito de CRUD integral se aplica também a `Usuario`.
 
 - [ ] Confirmar escopo e nomenclatura final do produto.

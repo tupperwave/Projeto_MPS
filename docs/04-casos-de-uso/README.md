@@ -17,6 +17,7 @@
 - [UC13](uc13.md)
 - [UC14](uc14.md)
 - [UC15](uc15.md) — Manter anotações de hosts e consultar gerentes
+- [UC16](uc16.md) — Consultar tentativas e exportar relatório de acessos
 
 ## Diagrama UML de casos de uso — gerenciamento de usuários
 
@@ -24,7 +25,7 @@ Fonte PlantUML: [diagrama-usuarios.puml](diagrama-usuarios.puml). Ela apresenta 
 
 ## Diagrama geral — versão 2 do documento
 
-O [diagrama-casos-de-uso-v2.puml](diagrama-casos-de-uso-v2.puml) reúne os requisitos funcionais documentados para o produto e as mudanças da Sprint 3. A análise de cobertura, incluindo referências de requisitos sem especificação correspondente, está no [Documento do Projeto — Versão 2](../09-documento-projeto-v2.md).
+O [diagrama-casos-de-uso-v2.puml](diagrama-casos-de-uso-v2.puml) reúne os requisitos funcionais documentados para o produto e as mudanças das Sprints 3 e 4. A análise de cobertura, incluindo referências de requisitos sem especificação correspondente, está no [Documento do Projeto — Versão 2.1](../09-documento-projeto-v2.md).
 
 ## Visão funcional — gerenciamento de usuários
 
@@ -56,6 +57,6 @@ flowchart LR
     repo -->|retorna somente login| listar
 ```
 
-O diagrama cobre RF06, RF16 e RF17. O diagrama geral do produto ainda precisa ser elaborado e revisado pela equipe.
+O diagrama cobre RF06, RF16 e RF17. O diagrama geral do produto está disponível em [diagrama-casos-de-uso-v2.puml](diagrama-casos-de-uso-v2.puml) e ainda pode receber revisão da equipe.
 
 Os dois atores são perfis de uso previstos nos casos de uso; autenticação e autorização por perfil não fazem parte desta implementação.

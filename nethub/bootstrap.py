@@ -17,7 +17,6 @@ from .application.action_registry import (
     registro_padrao,
 )
 from .application.annotation_service import HostAnnotationService
-from .application.caretaker import Caretaker
 from .application.capability_detector import CapabilityDetector
 from .application.discovery_service import DiscoveryService
 from .application.entity_count_service import EntityCountService
@@ -118,11 +117,10 @@ def criar_container(
         repositorios.acessos,
         logger,
     )
-    caretaker = Caretaker()
     anotacoes = HostAnnotationService(
         repositorios.anotacoes,
         repositorios.hosts,
-        caretaker,
+        repositorios.mementos_anotacao,
     )
     contador_entidades = EntityCountService(
         (

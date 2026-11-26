@@ -40,6 +40,15 @@ classDiagram
             +criada_em: datetime
             +atualizada_em: datetime
             +atualizar(conteudo)
+            +criar_memento() MementoAnotacao
+            +restaurar(memento)
+        }
+
+        class MementoAnotacao {
+            <<Immutable Snapshot>>
+            +id: int
+            +conteudo: str
+            +atualizada_em: datetime
         }
 
         class Evidencia {
@@ -269,6 +278,30 @@ classDiagram
             +listar(host_ip) list
             +atualizar(id, conteudo) AnotacaoHost
             +excluir(id) bool
+            +desfazer_ultima_atualizacao() AnotacaoHost
+        }
+
+        class Command {
+            <<Interface>>
+            +execute()
+        }
+
+        class CommandInvoker {
+            +invoke(command)
+        }
+
+        class CreateAnnotationCommand
+        class GetAnnotationCommand
+        class ListAnnotationsCommand
+        class UpdateAnnotationCommand
+        class DeleteAnnotationCommand
+        class UndoLastAnnotationUpdateCommand
+
+        class AnnotationMementoRepository {
+            <<Port>>
+            +salvar(memento)
+            +obter_ultimo() MementoAnotacao
+            +limpar()
         }
 
         class ActionExecutor {
@@ -332,7 +365,7 @@ classDiagram
 
     namespace Infraestrutura {
         class RepositoryFactory {
-            <<Abstract Factory>>
+            <<Abstract Factory parcial>>
             -_banco: SqliteDatabase
             -_persistencia_usuarios: str
             +criar() Repositories
@@ -396,6 +429,13 @@ classDiagram
             +listar(host_ip) list
             +excluir(id) bool
             +contar() int
+        }
+
+        class SqliteAnnotationMementoRepository {
+            <<Concrete Repository>>
+            +salvar(memento)
+            +obter_ultimo() MementoAnotacao
+            +limpar()
         }
 
         class SqliteUserAccessRepository {
@@ -533,6 +573,23 @@ classDiagram
     HistoryService --> EvidenceRepository
     HostAnnotationService --> HostAnnotationRepository
     HostAnnotationService --> HostRepository
+    HostAnnotationService --> AnnotationMementoRepository
+    AnotacaoHost ..> MementoAnotacao : cria e restaura
+
+    FacadeSingletonController --> CommandInvoker : executa pedidos de anotacao
+    CommandInvoker --> Command : recebe
+    Command <|.. CreateAnnotationCommand
+    Command <|.. GetAnnotationCommand
+    Command <|.. ListAnnotationsCommand
+    Command <|.. UpdateAnnotationCommand
+    Command <|.. DeleteAnnotationCommand
+    Command <|.. UndoLastAnnotationUpdateCommand
+    CreateAnnotationCommand --> HostAnnotationService
+    GetAnnotationCommand --> HostAnnotationService
+    ListAnnotationsCommand --> HostAnnotationService
+    UpdateAnnotationCommand --> HostAnnotationService
+    DeleteAnnotationCommand --> HostAnnotationService
+    UndoLastAnnotationUpdateCommand --> HostAnnotationService
     ActionExecutor --> RemoteExecutorPort
     ActionExecutor --> EvidenceService
     EntityCountService --> EntityCountSource
@@ -566,6 +623,8 @@ classDiagram
     SqliteHostRepository ..|> HostRepository
     SqliteEvidenceRepository ..|> EvidenceRepository
     SqliteHostAnnotationRepository ..|> HostAnnotationRepository
+    SqliteAnnotationMementoRepository ..|> AnnotationMementoRepository
+    SqliteAnnotationMementoRepository --> MementoAnotacao : persiste snapshot unico
     SqliteUserAccessRepository ..|> UserAccessRepository
 
     MemoryUserRepository ..|> EntityCountSource
@@ -578,6 +637,7 @@ classDiagram
     SqliteHostRepository --> SqliteDatabase
     SqliteEvidenceRepository --> SqliteDatabase
     SqliteHostAnnotationRepository --> SqliteDatabase
+    SqliteAnnotationMementoRepository --> SqliteDatabase
     SqliteUserAccessRepository --> SqliteDatabase
 
     %% =========================================================
@@ -623,3 +683,5 @@ classDiagram
     note for PythonLoggingAdapter "Adapter: converte LoggerPort para logging.Logger."
     note for AccessReportTemplate "Template Method: fixa o algoritmo de geracao do relatorio."
     note for FacadeSingletonController "Facade: oferece um ponto unico de acesso aos gerentes."
+    note for CommandInvoker "Command: executa operacoes de anotacao encapsuladas em comandos."
+    note for MementoAnotacao "Memento: guarda o estado anterior a ultima atualizacao."
